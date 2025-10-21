@@ -136,6 +136,7 @@ export default function DragRaceSimulator() {
   const [eliminated, setEliminated] = useState<Queen | null>(null);
   const [eliminated2, setEliminated2] = useState<Queen | null>(null); // For double sashay
   const [currentStoryline, setCurrentStoryline] = useState<string>("");
+  const [producerAdjustments, setProducerAdjustments] = useState<Record<string, number>>({});
 
   const currentEp = EPISODES[currentEpIdx];
   const activeQueens = useMemo(() => queens.filter(q => q.status === 'active'), [queens]);
@@ -178,14 +179,15 @@ export default function DragRaceSimulator() {
     setDoubleShantayUsed(false);
     setDoubleSashayUsed(false);
     setGameState('briefing');
+    setProducerAdjustments({});
   };
 
   // --- SIMULATION CORE ---
-  const getQueenScore = (queen: Queen, ep: Episode) => {
+  const getQueenScore = (queen: Queen, ep: Episode, adjustment = 0) => {
     let raw = 0;
     ep.challengeStats.forEach(s => raw += queen.stats[s]);
     let avg = raw / ep.challengeStats.length;
-    
+
     // Riggory & Variance
     let score = avg + randomFloat(-1.5, 1.5); // Base variance
     score += (queen.stats.runway * 0.15); // Runway always helps slightly
@@ -195,12 +197,12 @@ export default function DragRaceSimulator() {
     // Narrative Caps
     if (queen.wins >= 3 && randomFloat(0, 1) > 0.7) score -= 2; // harder to get 4th win
 
-    return score;
+    return score + adjustment;
   };
 
   const runEpisode = () => {
     setGameState('simulating');
-    
+
     if (currentEp.isFinale) {
       setTimeout(() => handleFinale(), 2000);
       return;
@@ -210,7 +212,8 @@ export default function DragRaceSimulator() {
     const competingQueens = activeQueens.filter(q => q.trackRecord[currentEpIdx] !== 'GUEST');
     
     // Score them
-    let scored = competingQueens.map(q => ({ q, score: getQueenScore(q, currentEp) }));
+    const adjustments = producerAdjustments;
+    let scored = competingQueens.map(q => ({ q, score: getQueenScore(q, currentEp, adjustments[q.id] || 0) }));
     scored.sort((a, b) => b.score - a.score);
 
     // Assign Placements based on format
@@ -323,6 +326,7 @@ export default function DragRaceSimulator() {
     }
 
     setPlacements(newPlacements);
+    setProducerAdjustments({});
     setTimeout(() => setGameState('critiques'), 2000);
   };
 
@@ -357,16 +361,22 @@ export default function DragRaceSimulator() {
     s1 += (q1.wins * 2) - (q1.bottoms * 1.5);
     s2 += (q2.wins * 2) - (q2.bottoms * 1.5);
 
+    const hasFutureElimination = EPISODES.slice(currentEpIdx + 1).some(ep => !ep.isFinale && !ep.noElimination);
+    const shouldForceDoubleShantay = !doubleShantayUsed && !currentEp.noElimination && !hasFutureElimination;
+
     setTimeout(() => {
        // CHECK TWISTS
        const bothDidWell = s1 > 12 && s2 > 12;
        const bothDidBad = s1 < 5 && s2 < 5;
        const closeCall = Math.abs(s1 - s2) < 2;
 
-       if (bothDidWell && closeCall && !doubleShantayUsed && activeQueens.length > 6) {
+       if (shouldForceDoubleShantay || (bothDidWell && closeCall && !doubleShantayUsed && activeQueens.length > 6)) {
          // DOUBLE SHANTAY
          setDoubleShantayUsed(true);
-         setCurrentStoryline("It was too close to call! A double shantay saves both queens.");
+         setCurrentStoryline(shouldForceDoubleShantay
+           ? "The producers demand a gag-worthy moment! A forced double shantay keeps both queens in the race."
+           : "It was too close to call! A double shantay saves both queens."
+         );
          finalizeEpisode(placements, null);
        } else if (bothDidBad && !doubleSashayUsed && activeQueens.length > 8 && !currentEp.noElimination) {
          // DOUBLE SASHAY (RARE)
@@ -516,7 +526,7 @@ export default function DragRaceSimulator() {
       )}>
         {queen.status === 'winner' && <Crown className="absolute top-1 right-1 h-6 w-6 text-yellow-500 animate-bounce" />}
         {queen.status === 'eliminated' && <Skull className="absolute top-2 right-2 h-4 w-4 text-gray-400" />}
-        
+
         <div className="flex flex-col items-center text-center space-y-2">
           <QueenAvatar queen={queen} size={mini ? 'sm' : 'md'} className={mini ? 'border-pink-300' : 'border-pink-200'} />
           <div className="w-full">
@@ -536,6 +546,120 @@ export default function DragRaceSimulator() {
         )}
       </div>
     )
+  };
+
+  const ProducerRoom = () => {
+    const eligibleQueens = activeQueens
+      .filter(q => q.trackRecord[currentEpIdx] !== 'GUEST')
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    if (!eligibleQueens.length) return null;
+
+    const hasCustomAdjustments = eligibleQueens.some(q => (producerAdjustments[q.id] || 0) !== 0);
+
+    const updateAdjustment = (queenId: string, value: number) => {
+      const clamped = Math.max(-5, Math.min(5, Math.round(value)));
+      setProducerAdjustments(prev => {
+        const next = { ...prev, [queenId]: clamped };
+        if (clamped === 0) {
+          delete next[queenId];
+        }
+        return next;
+      });
+    };
+
+    return (
+      <div className="bg-white rounded-3xl p-6 shadow-lg border-2 border-purple-100">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-3">
+            <Drama className="h-8 w-8 text-purple-500" />
+            <div>
+              <h3 className="text-2xl font-black uppercase tracking-tight">Producer Room</h3>
+              <p className="text-xs md:text-sm text-stone-500 font-semibold uppercase tracking-wide">
+                Boost or penalize queens for the upcoming challenge. Adjustments apply once.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setProducerAdjustments({})}
+            disabled={!hasCustomAdjustments}
+            className={cn(
+              "px-4 py-2 rounded-full text-xs font-black uppercase tracking-wide transition-colors",
+              hasCustomAdjustments
+                ? "bg-purple-600 text-white hover:bg-purple-700"
+                : "bg-stone-200 text-stone-400 cursor-not-allowed"
+            )}
+          >
+            Reset Adjustments
+          </button>
+        </div>
+
+        <div className="mt-6 grid gap-4 sm:grid-cols-2">
+          {eligibleQueens.map(q => {
+            const value = producerAdjustments[q.id] ?? 0;
+            return (
+              <div
+                key={q.id}
+                className={cn(
+                  "p-4 border rounded-2xl bg-stone-50/80 flex flex-col gap-4 transition-all",
+                  value !== 0 && "border-purple-300 shadow-md"
+                )}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <QueenAvatar queen={q} size="sm" className="border-purple-200" />
+                    <div>
+                      <p className="text-sm font-bold leading-tight">{q.name}</p>
+                      <p className="text-xs uppercase text-stone-500 font-semibold">
+                        {value > 0 ? '+' : ''}{value} points
+                      </p>
+                    </div>
+                  </div>
+                  {value !== 0 && (
+                    <button
+                      onClick={() => updateAdjustment(q.id, 0)}
+                      className="text-[10px] uppercase font-black tracking-wide text-purple-600 hover:text-purple-800"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => updateAdjustment(q.id, value - 1)}
+                    className="w-10 h-10 rounded-full bg-purple-100 text-purple-700 font-black text-lg hover:bg-purple-200"
+                    type="button"
+                  >
+                    -
+                  </button>
+                  <input
+                    type="range"
+                    min={-5}
+                    max={5}
+                    step={1}
+                    value={value}
+                    onChange={e => updateAdjustment(q.id, Number(e.target.value))}
+                    className="flex-1 accent-purple-600"
+                  />
+                  <button
+                    onClick={() => updateAdjustment(q.id, value + 1)}
+                    className="w-10 h-10 rounded-full bg-purple-100 text-purple-700 font-black text-lg hover:bg-purple-200"
+                    type="button"
+                  >
+                    +
+                  </button>
+                </div>
+                <div className="flex justify-between text-[10px] uppercase font-semibold text-stone-400">
+                  <span>Penalty</span>
+                  <span>Boost</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
   };
 
   const TrackRecordTable = () => {
@@ -642,6 +766,12 @@ export default function DragRaceSimulator() {
                  </div>
                )}
             </div>
+
+            {gameState === 'briefing' && (
+              <div className="animate-in slide-in-from-bottom-5 duration-500">
+                <ProducerRoom />
+              </div>
+            )}
 
             {/* WORKROOM (ACTIVE QUEENS) */}
             {['briefing', 'simulating'].includes(gameState) && (
