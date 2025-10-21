@@ -68,20 +68,37 @@ interface Episode {
 const BASE_STATS = { acting: 5, improv: 5, comedy: 5, dance: 5, design: 5, singing: 5, runway: 5, lipsync: 5, branding: 5, charisma: 5, makeover: 5 };
 
 const INITIAL_CAST_DATA: Partial<Queen>[] = [
-  { id: 'jaida', name: 'Jaida Essence Hall', image: createAvatarUrl('Jaida Essence Hall'), stats: { ...BASE_STATS, design: 9, runway: 10, lipsync: 8, charisma: 8, branding: 7, acting: 6 } },
-  { id: 'gigi', name: 'Gigi Goode', image: createAvatarUrl('Gigi Goode'), stats: { ...BASE_STATS, design: 10, runway: 9, comedy: 8, improv: 8, singing: 7, lipsync: 5 } },
-  { id: 'crystal', name: 'Crystal Methyd', image: createAvatarUrl('Crystal Methyd'), stats: { ...BASE_STATS, charisma: 10, comedy: 8, improv: 7, makeover: 9, runway: 8, dance: 4 } },
-  { id: 'jackie', name: 'Jackie Cox', image: createAvatarUrl('Jackie Cox'), stats: { ...BASE_STATS, acting: 9, comedy: 9, improv: 8, branding: 8, lipsync: 7, design: 4 } },
-  { id: 'heidi', name: 'Heidi N Closet', image: createAvatarUrl('Heidi N Closet'), stats: { ...BASE_STATS, charisma: 10, comedy: 8, lipsync: 9, acting: 7, runway: 4, design: 3 } },
-  { id: 'widow', name: "Widow Von'Du", image: createAvatarUrl("Widow Von'Du"), stats: { ...BASE_STATS, dance: 9, lipsync: 10, singing: 8, comedy: 7, acting: 7, runway: 6 } },
-  { id: 'jan', name: 'Jan', image: createAvatarUrl('Jan'), stats: { ...BASE_STATS, singing: 10, dance: 8, acting: 7, runway: 7, charisma: 6, comedy: 5 } },
-  { id: 'brita', name: 'Brita', image: createAvatarUrl('Brita'), stats: { ...BASE_STATS, dance: 7, acting: 6, branding: 6, lipsync: 7, comedy: 5, runway: 5 } },
-  { id: 'aiden', name: 'Aiden Zhane', image: createAvatarUrl('Aiden Zhane'), stats: { ...BASE_STATS, acting: 7, design: 6, charisma: 4, improv: 3, comedy: 3, dance: 2 } },
-  { id: 'nicky', name: 'Nicky Doll', image: createAvatarUrl('Nicky Doll'), stats: { ...BASE_STATS, design: 9, runway: 10, makeover: 8, acting: 3, improv: 2, comedy: 2 } },
-  { id: 'rock', name: 'Rock M. Sakura', image: createAvatarUrl('Rock M. Sakura'), stats: { ...BASE_STATS, dance: 8, design: 6, charisma: 7, runway: 6, improv: 4, acting: 4 } },
-  { id: 'dahlia', name: 'Dahlia Sin', image: createAvatarUrl('Dahlia Sin'), stats: { ...BASE_STATS, runway: 8, design: 5, charisma: 3, acting: 2, comedy: 2, lipsync: 3 } },
-  { id: 'sherry', name: 'Sherry Pie', image: createAvatarUrl('Sherry Pie'), stats: { ...BASE_STATS, acting: 9, comedy: 9, improv: 8, branding: 7, runway: 6, lipsync: 4 } },
+  { id: 'jaida', name: 'Jaida Essence Hall', stats: { ...BASE_STATS, design: 9, runway: 10, lipsync: 8, charisma: 8, branding: 7, acting: 6 } },
+  { id: 'gigi', name: 'Gigi Goode', stats: { ...BASE_STATS, design: 10, runway: 9, comedy: 8, improv: 8, singing: 7, lipsync: 5 } },
+  { id: 'crystal', name: 'Crystal Methyd', stats: { ...BASE_STATS, charisma: 10, comedy: 8, improv: 7, makeover: 9, runway: 8, dance: 4 } },
+  { id: 'jackie', name: 'Jackie Cox', stats: { ...BASE_STATS, acting: 9, comedy: 9, improv: 8, branding: 8, lipsync: 7, design: 4 } },
+  { id: 'heidi', name: 'Heidi N Closet', stats: { ...BASE_STATS, charisma: 10, comedy: 8, lipsync: 9, acting: 7, runway: 4, design: 3 } },
+  { id: 'widow', name: "Widow Von'Du", stats: { ...BASE_STATS, dance: 9, lipsync: 10, singing: 8, comedy: 7, acting: 7, runway: 6 } },
+  { id: 'jan', name: 'Jan', stats: { ...BASE_STATS, singing: 10, dance: 8, acting: 7, runway: 7, charisma: 6, comedy: 5 } },
+  { id: 'brita', name: 'Brita', stats: { ...BASE_STATS, dance: 7, acting: 6, branding: 6, lipsync: 7, comedy: 5, runway: 5 } },
+  { id: 'aiden', name: 'Aiden Zhane', stats: { ...BASE_STATS, acting: 7, design: 6, charisma: 4, improv: 3, comedy: 3, dance: 2 } },
+  { id: 'nicky', name: 'Nicky Doll', stats: { ...BASE_STATS, design: 9, runway: 10, makeover: 8, acting: 3, improv: 2, comedy: 2 } },
+  { id: 'rock', name: 'Rock M. Sakura', stats: { ...BASE_STATS, dance: 8, design: 6, charisma: 7, runway: 6, improv: 4, acting: 4 } },
+  { id: 'dahlia', name: 'Dahlia Sin', stats: { ...BASE_STATS, runway: 8, design: 5, charisma: 3, acting: 2, comedy: 2, lipsync: 3 } },
+  { id: 'sherry', name: 'Sherry Pie', stats: { ...BASE_STATS, acting: 9, comedy: 9, improv: 8, branding: 7, runway: 6, lipsync: 4 } },
 ];
+
+const QUEEN_IMAGE_OVERRIDES: Record<string, string> = {
+  // Provide direct image URLs to replace the generated avatars, e.g.:
+  jaida: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/8/8e/JaidaEssenceHallS12CastMug.png',
+  aiden: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/2/26/AidenZhaneS12CastMug.png',
+    gigi: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/b/b8/GigiGoodeS12CastMug.png',
+      crystal: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/d/d8/CrystalMethydS12CastMug.png',
+        dahlia: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/6/6a/DahliaSinS12CastMug.png',
+          brita: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/3/3e/BritaS12CastMug.png',
+            jan: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/a/a9/JanS12CastMug.png',
+              heidi: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/5/56/HeidiNClosetS12CastMug.png',
+                widow: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/3/3d/WidowVon%27DuS12CastMug.png',
+                  nicky: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/5/5f/NickyDollS12CastMug.png',
+                    rock: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/d/dd/RockMSakuraS12CastMug.png',
+                      sherry: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/e/ea/SherryPieS12CastMug.png',
+                                            jackie: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/e/e7/JackieCoxS12CastMug.png',
+};
 
 const EPISODES: Episode[] = [
   { number: 1, title: "I'm That Bitch", challengeType: 'mix', challengeStats: ['dance', 'runway', 'charisma'], description: "Split Premiere Group A: Write a verse and perform choreo.", isPremiere: true, isSplitPremiereA: true, noElimination: true },
@@ -128,7 +145,7 @@ export default function DragRaceSimulator() {
     const fullCast: Queen[] = INITIAL_CAST_DATA.map(data => ({
       id: data.id!,
       name: data.name!,
-      image: data.image || createAvatarUrl(data.name!),
+      image: QUEEN_IMAGE_OVERRIDES[data.id!] || data.image || createAvatarUrl(data.name!),
       stats: data.stats as Record<Stat, number>,
       trackRecord: Array(EPISODES.length).fill(null),
       status: 'active',
@@ -217,28 +234,26 @@ export default function DragRaceSimulator() {
 
       const availableForCritiques = Math.max(0, count - (winCount + bottomCount));
 
-      let highTargetBase = count >= 9 ? 3 : count >= 7 ? 2 : 1;
-      let lowTargetBase = count >= 9 ? 2 : 1;
+      let highTarget = 0;
+      let lowTarget = 0;
 
-      if (count <= 5) {
-        highTargetBase = Math.min(highTargetBase, 1);
-        lowTargetBase = Math.min(lowTargetBase, 1);
+      if (count === 5 && bottomCount === 2 && !currentEp.noElimination) {
+        highTarget = 2;
+        lowTarget = 0;
+      } else {
+        highTarget = Math.min(2, availableForCritiques);
+        if (availableForCritiques >= 3) {
+          highTarget = Math.min(highTarget, availableForCritiques - 1);
+        }
+
+        if (availableForCritiques > highTarget && !currentEp.noElimination) {
+          lowTarget = 1;
+        }
+
+        if (highTarget + lowTarget > availableForCritiques) {
+          lowTarget = Math.max(0, availableForCritiques - highTarget);
+        }
       }
-
-      if (currentEp.challengeType === 'design' && availableForCritiques > 2) {
-        highTargetBase = Math.min(highTargetBase + 1, availableForCritiques);
-      }
-
-      if (currentEp.challengeType === 'branding') {
-        highTargetBase = Math.min(Math.max(highTargetBase, 2), availableForCritiques);
-      }
-
-      if (currentEp.challengeType === 'makeover' && availableForCritiques > 0) {
-        lowTargetBase = Math.min(lowTargetBase + 1, availableForCritiques);
-      }
-
-      let highTarget = Math.min(highTargetBase, availableForCritiques);
-      let lowTarget = Math.min(lowTargetBase, Math.max(availableForCritiques - highTarget, 0));
 
       const scores = scored.map(s => s.score);
       const averageScore = scores.reduce((sum, score) => sum + score, 0) / count;
@@ -267,6 +282,16 @@ export default function DragRaceSimulator() {
         }
       }
 
+      if (highs.length < highTarget) {
+        for (let i = winCount; i < count - bottomCount && highs.length < highTarget; i++) {
+          const entry = scored[i];
+          if (!newPlacements[entry.q.id]) {
+            newPlacements[entry.q.id] = 'HIGH';
+            highs.push(entry.q.id);
+          }
+        }
+      }
+
       const lows: string[] = [];
       for (let i = count - bottomCount - 1; i >= winCount; i--) {
         const entry = scored[i];
@@ -277,19 +302,13 @@ export default function DragRaceSimulator() {
         }
       }
 
-      if (highTarget > 0 && highs.length === 0 && count - (winCount + bottomCount) > 0) {
-        const candidate = scored[winCount];
-        if (candidate && !newPlacements[candidate.q.id]) {
-          newPlacements[candidate.q.id] = 'HIGH';
-          highs.push(candidate.q.id);
-        }
-      }
-
-      if (lowTarget > 0 && lows.length === 0 && count - (winCount + bottomCount) > highs.length) {
-        const candidate = scored[count - bottomCount - 1];
-        if (candidate && (!newPlacements[candidate.q.id] || newPlacements[candidate.q.id] === 'SAFE')) {
-          newPlacements[candidate.q.id] = 'LOW';
-          lows.push(candidate.q.id);
+      if (lowTarget > 0 && lows.length < lowTarget) {
+        for (let i = count - bottomCount - 1; i >= winCount && lows.length < lowTarget; i--) {
+          const entry = scored[i];
+          if (!newPlacements[entry.q.id]) {
+            newPlacements[entry.q.id] = 'LOW';
+            lows.push(entry.q.id);
+          }
         }
       }
 
