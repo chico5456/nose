@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Trophy, Skull, Star, Sparkles, Crown, Mic, Music, Smile, Drama, Zap, Heart, Flame, Frown, Meh } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -25,6 +25,11 @@ function randomFloat(min: number, max: number) {
     return Math.random() * (max - min) + min;
 }
 
+const DEFAULT_AVATAR = 'https://api.dicebear.com/7.x/avataaars/svg?seed=DragRace&backgroundColor=fdf2f8,f5d0fe&backgroundType=gradientLinear&radius=50';
+
+const createAvatarUrl = (name: string) =>
+  `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name)}&backgroundColor=fdf2f8,f5d0fe&backgroundType=gradientLinear&radius=50`;
+
 // --- TYPES ---
 type Stat = 'acting' | 'improv' | 'comedy' | 'dance' | 'design' | 'singing' | 'runway' | 'lipsync' | 'branding' | 'charisma' | 'makeover';
 type Placement = 'WIN' | 'TOP2' | 'HIGH' | 'SAFE' | 'LOW' | 'BTM2' | 'ELIM' | 'GUEST' | null;
@@ -32,6 +37,7 @@ type Placement = 'WIN' | 'TOP2' | 'HIGH' | 'SAFE' | 'LOW' | 'BTM2' | 'ELIM' | 'G
 interface Queen {
   id: string;
   name: string;
+  image: string;
   stats: Record<Stat, number>;
   trackRecord: Placement[];
   status: 'active' | 'eliminated' | 'winner';
@@ -76,6 +82,12 @@ const INITIAL_CAST_DATA: Partial<Queen>[] = [
   { id: 'dahlia', name: 'Dahlia Sin', stats: { ...BASE_STATS, runway: 8, design: 5, charisma: 3, acting: 2, comedy: 2, lipsync: 3 } },
   { id: 'sherry', name: 'Sherry Pie', stats: { ...BASE_STATS, acting: 9, comedy: 9, improv: 8, branding: 7, runway: 6, lipsync: 4 } },
 ];
+
+const QUEEN_IMAGE_OVERRIDES: Record<string, string> = {
+  // Provide direct image URLs to replace the generated avatars, e.g.:
+  // jaida: 'https://example.com/jaida-essence-hall.png',
+  // gigi: 'https://example.com/gigi-goode.jpg',
+};
 
 const EPISODES: Episode[] = [
   { number: 1, title: "I'm That Bitch", challengeType: 'mix', challengeStats: ['dance', 'runway', 'charisma'], description: "Split Premiere Group A: Write a verse and perform choreo.", isPremiere: true, isSplitPremiereA: true, noElimination: true },
@@ -122,6 +134,7 @@ export default function DragRaceSimulator() {
     const fullCast: Queen[] = INITIAL_CAST_DATA.map(data => ({
       id: data.id!,
       name: data.name!,
+      image: QUEEN_IMAGE_OVERRIDES[data.id!] || data.image || createAvatarUrl(data.name!),
       stats: data.stats as Record<Stat, number>,
       trackRecord: Array(EPISODES.length).fill(null),
       status: 'active',
@@ -203,21 +216,99 @@ export default function DragRaceSimulator() {
       setTop2([scored[0].q, scored[1].q]);
       setLipsyncers([]);
     } else {
-      // Standard or Finale-ish formats
-      let win=1, high=2, low=1, btm=2;
-      if (count <= 5) { high=1; low=1; btm=2; } // Top 5
-      if (count === 4) { win=1; high=0; low=1; btm=2; } // Top 4 Rumix usually
-      
-      scored.forEach((s, i) => {
-        if (i < win) newPlacements[s.q.id] = 'WIN';
-        else if (i < win + high) newPlacements[s.q.id] = 'HIGH';
-        else if (i >= count - btm) newPlacements[s.q.id] = 'BTM2';
-        else if (i >= count - btm - low) newPlacements[s.q.id] = 'LOW';
-        else newPlacements[s.q.id] = 'SAFE';
+      // Standard or Finale-ish formats with dynamic placements
+      const winCount = 1;
+      let bottomCount = Math.min(2, Math.max(1, count - 1));
+      if (currentEp.noElimination) bottomCount = 0;
+
+      const availableForCritiques = Math.max(0, count - (winCount + bottomCount));
+
+      let highTarget = 0;
+      let lowTarget = 0;
+
+      if (count === 5 && bottomCount === 2 && !currentEp.noElimination) {
+        highTarget = 2;
+        lowTarget = 0;
+      } else {
+        highTarget = Math.min(2, availableForCritiques);
+        if (availableForCritiques >= 3) {
+          highTarget = Math.min(highTarget, availableForCritiques - 1);
+        }
+
+        if (availableForCritiques > highTarget && !currentEp.noElimination) {
+          lowTarget = 1;
+        }
+
+        if (highTarget + lowTarget > availableForCritiques) {
+          lowTarget = Math.max(0, availableForCritiques - highTarget);
+        }
+      }
+
+      const scores = scored.map(s => s.score);
+      const averageScore = scores.reduce((sum, score) => sum + score, 0) / count;
+      const variance = scores.reduce((sum, score) => sum + Math.pow(score - averageScore, 2), 0) / count;
+      const stdDev = Math.sqrt(variance || 0.0001);
+
+      const highThreshold = averageScore + stdDev * 0.35;
+      const lowThreshold = averageScore - stdDev * 0.35;
+
+      const winners = scored.slice(0, winCount);
+      winners.forEach(({ q }) => {
+        newPlacements[q.id] = 'WIN';
+      });
+
+      const bottomContestants = scored.slice(count - bottomCount);
+      bottomContestants.forEach(({ q }) => {
+        newPlacements[q.id] = bottomCount > 0 ? 'BTM2' : 'SAFE';
+      });
+
+      const highs: string[] = [];
+      for (let i = winCount; i < count - bottomCount; i++) {
+        const entry = scored[i];
+        if (entry.score >= highThreshold && highs.length < highTarget) {
+          newPlacements[entry.q.id] = 'HIGH';
+          highs.push(entry.q.id);
+        }
+      }
+
+      if (highs.length < highTarget) {
+        for (let i = winCount; i < count - bottomCount && highs.length < highTarget; i++) {
+          const entry = scored[i];
+          if (!newPlacements[entry.q.id]) {
+            newPlacements[entry.q.id] = 'HIGH';
+            highs.push(entry.q.id);
+          }
+        }
+      }
+
+      const lows: string[] = [];
+      for (let i = count - bottomCount - 1; i >= winCount; i--) {
+        const entry = scored[i];
+        if (newPlacements[entry.q.id]) continue;
+        if (entry.score <= lowThreshold && lows.length < lowTarget) {
+          newPlacements[entry.q.id] = 'LOW';
+          lows.push(entry.q.id);
+        }
+      }
+
+      if (lowTarget > 0 && lows.length < lowTarget) {
+        for (let i = count - bottomCount - 1; i >= winCount && lows.length < lowTarget; i--) {
+          const entry = scored[i];
+          if (!newPlacements[entry.q.id]) {
+            newPlacements[entry.q.id] = 'LOW';
+            lows.push(entry.q.id);
+          }
+        }
+      }
+
+      scored.forEach(({ q }) => {
+        if (!newPlacements[q.id]) {
+          newPlacements[q.id] = 'SAFE';
+        }
       });
 
       setTop2([]);
-      setLipsyncers(scored.slice(count - btm).map(s => s.q));
+      setLipsyncers(bottomCount > 0 ? bottomContestants.map(s => s.q) : []);
     }
 
     setPlacements(newPlacements);
@@ -367,6 +458,42 @@ export default function DragRaceSimulator() {
   };
 
   // --- COMPONENTS ---
+  const QueenAvatar = (
+    { queen, size = 'md', className }: { queen?: Queen; size?: 'sm' | 'md' | 'lg' | 'xl'; className?: string }
+  ) => {
+    const sizeMap = {
+      sm: 'w-12 h-12',
+      md: 'w-20 h-20',
+      lg: 'w-24 h-24',
+      xl: 'w-32 h-32 md:w-48 md:h-48',
+    } as const;
+
+    const borderMap = {
+      sm: 'border-2',
+      md: 'border-4',
+      lg: 'border-4',
+      xl: 'border-[6px]',
+    } as const;
+
+    return (
+      <div
+        className={cn(
+          'relative rounded-full overflow-hidden bg-gradient-to-br from-pink-200 via-fuchsia-200 to-purple-300 border-pink-200 shadow-inner flex items-center justify-center',
+          sizeMap[size],
+          borderMap[size],
+          className
+        )}
+      >
+        <img
+          src={queen?.image || DEFAULT_AVATAR}
+          alt={queen ? `${queen.name} avatar` : 'Drag Race queen avatar'}
+          className="w-full h-full object-cover"
+          loading="lazy"
+        />
+      </div>
+    );
+  };
+
   const QueenCard = ({ queen, mini = false }: { queen: Queen, mini?: boolean }) => {
     const place = placements[queen.id];
     return (
@@ -380,10 +507,7 @@ export default function DragRaceSimulator() {
         {queen.status === 'eliminated' && <Skull className="absolute top-2 right-2 h-4 w-4 text-gray-400" />}
         
         <div className="flex flex-col items-center text-center space-y-2">
-          {/* Avatar Placeholder */}
-          <div className={cn("rounded-full bg-gradient-to-tr from-pink-300 to-purple-400 shadow-inner flex items-center justify-center font-black text-white", mini ? "w-12 h-12 text-lg" : "w-20 h-20 text-2xl")}>
-            {queen.name.charAt(0)}
-          </div>
+          <QueenAvatar queen={queen} size={mini ? 'sm' : 'md'} className={mini ? 'border-pink-300' : 'border-pink-200'} />
           <div className="w-full">
              <h3 className={cn("font-bold leading-tight", mini ? "text-xs truncate" : "text-sm md:text-base line-clamp-2 h-10 flex items-center justify-center")}>{queen.name}</h3>
              {!mini && queen.status === 'active' && (
@@ -422,9 +546,12 @@ export default function DragRaceSimulator() {
           <tbody>
             {sorted.map(q => (
               <tr key={q.id} className={cn("border-t", q.status === 'winner' && "bg-yellow-50", q.status === 'eliminated' && "bg-gray-50")}>
-                <td className={cn("p-3 font-bold sticky left-0 z-10 flex items-center gap-2 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]", q.status === 'active' ? "bg-white" : q.status === 'winner' ? "bg-yellow-50" : "bg-gray-50")}>
-                   {q.status === 'winner' && <Crown className="h-4 w-4 text-yellow-500"/>}
-                   <span className="truncate max-w-[100px] md:max-w-none">{q.name}</span>
+                <td className={cn("p-3 font-bold sticky left-0 z-10 flex items-center gap-3 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]", q.status === 'active' ? "bg-white" : q.status === 'winner' ? "bg-yellow-50" : "bg-gray-50") }>
+                   <QueenAvatar queen={q} size="sm" className="border-white shadow" />
+                   <div className="flex items-center gap-1">
+                     {q.status === 'winner' && <Crown className="h-4 w-4 text-yellow-500"/>}
+                     <span className="truncate max-w-[100px] md:max-w-none">{q.name}</span>
+                   </div>
                 </td>
                 {q.trackRecord.map((tr, i) => (
                   <td key={i} className="p-1 text-center">
@@ -468,9 +595,11 @@ export default function DragRaceSimulator() {
             <button onClick={startSeason} className="bg-black text-white text-xl md:text-2xl px-12 py-6 rounded-full font-black hover:scale-110 hover:bg-pink-600 transition-all shadow-2xl">
               ENTER WERKROOM
             </button>
-            <div className="grid grid-cols-4 md:grid-cols-7 gap-2 mt-12 opacity-50">
+            <div className="grid grid-cols-4 md:grid-cols-7 gap-2 mt-12 opacity-80">
                {INITIAL_CAST_DATA.map(q => (
-                 <div key={q.id} className="w-10 h-10 rounded-full bg-stone-300" title={q.name} />
+                 <div key={q.id} className="w-10 h-10 rounded-full overflow-hidden border border-white/60 shadow-sm" title={q.name}>
+                   <img src={(q.image as string) || createAvatarUrl(q.name!)} alt={`${q.name} avatar preview`} className="w-full h-full object-cover" loading="lazy" />
+                 </div>
                ))}
             </div>
           </div>
@@ -562,12 +691,20 @@ export default function DragRaceSimulator() {
                   </h2>
                   <div className="flex items-center gap-8 md:gap-16">
                      <div className="text-center">
-                       <div className="w-32 h-32 md:w-48 md:h-48 bg-stone-800 rounded-full flex items-center justify-center text-4xl md:text-6xl font-black border-4 border-red-600">{currentEp.isPremiere ? top2[0]?.name[0] : lipsyncers[0]?.name[0]}</div>
+                       <QueenAvatar
+                         queen={currentEp.isPremiere ? top2[0] : lipsyncers[0]}
+                         size="xl"
+                         className="border-red-500 shadow-[0_0_25px_rgba(248,113,113,0.45)]"
+                       />
                        <h3 className="mt-4 text-xl md:text-3xl font-bold">{currentEp.isPremiere ? top2[0]?.name : lipsyncers[0]?.name}</h3>
                      </div>
                      <div className="text-4xl md:text-6xl font-black text-stone-600 italic">VS</div>
                      <div className="text-center">
-                       <div className="w-32 h-32 md:w-48 md:h-48 bg-stone-800 rounded-full flex items-center justify-center text-4xl md:text-6xl font-black border-4 border-red-600">{currentEp.isPremiere ? top2[1]?.name[0] : lipsyncers[1]?.name[0]}</div>
+                       <QueenAvatar
+                         queen={currentEp.isPremiere ? top2[1] : lipsyncers[1]}
+                         size="xl"
+                         className="border-red-500 shadow-[0_0_25px_rgba(248,113,113,0.45)]"
+                       />
                        <h3 className="mt-4 text-xl md:text-3xl font-bold">{currentEp.isPremiere ? top2[1]?.name : lipsyncers[1]?.name}</h3>
                      </div>
                   </div>
@@ -592,11 +729,20 @@ export default function DragRaceSimulator() {
                       <Skull className="w-24 h-24 text-red-500 mb-4" />
                       <h2 className="text-6xl font-black uppercase text-red-500 mb-4">DOUBLE SASHAY</h2>
                       <p className="text-2xl md:text-4xl font-bold">{eliminated.name} &amp; {eliminated2.name}</p>
+                      <div className="flex items-center justify-center gap-6 mt-8">
+                        <QueenAvatar queen={eliminated} size="lg" className="border-red-400" />
+                        <QueenAvatar queen={eliminated2} size="lg" className="border-red-400" />
+                      </div>
                      </>
                   ) : (
                      <>
                       <h2 className="text-4xl font-bold opacity-50 mb-2">Sashay Away...</h2>
                       <h1 className="text-7xl md:text-9xl font-black text-red-500 tracking-tighter leading-none">{eliminated?.name}</h1>
+                      {eliminated && (
+                        <div className="mt-10">
+                          <QueenAvatar queen={eliminated} size="lg" className="border-red-400 shadow-[0_0_30px_rgba(239,68,68,0.35)]" />
+                        </div>
+                      )}
                      </>
                   )}
                   <button onClick={nextEpisode} className="mt-16 px-8 py-3 border-2 border-white rounded-full font-bold hover:bg-white hover:text-red-950 transition-colors">
