@@ -67,67 +67,142 @@ interface Episode {
 // S12 adjusted for 13 queens. 
 const BASE_STATS = { acting: 5, improv: 5, comedy: 5, dance: 5, design: 5, singing: 5, runway: 5, lipsync: 5, branding: 5, charisma: 5, makeover: 5 };
 
-const INITIAL_CAST_DATA: Partial<Queen>[] = [
-  { id: 'jaida', name: 'Jaida Essence Hall', stats: { ...BASE_STATS, design: 9, runway: 10, lipsync: 8, charisma: 8, branding: 7, acting: 6 } },
-  { id: 'gigi', name: 'Gigi Goode', stats: { ...BASE_STATS, design: 10, runway: 9, comedy: 8, improv: 8, singing: 7, lipsync: 5 } },
-  { id: 'crystal', name: 'Crystal Methyd', stats: { ...BASE_STATS, charisma: 10, comedy: 8, improv: 7, makeover: 9, runway: 8, dance: 4 } },
-  { id: 'jackie', name: 'Jackie Cox', stats: { ...BASE_STATS, acting: 9, comedy: 9, improv: 8, branding: 8, lipsync: 7, design: 4 } },
-  { id: 'heidi', name: 'Heidi N Closet', stats: { ...BASE_STATS, charisma: 10, comedy: 8, lipsync: 9, acting: 7, runway: 4, design: 3 } },
-  { id: 'widow', name: "Widow Von'Du", stats: { ...BASE_STATS, dance: 9, lipsync: 10, singing: 8, comedy: 7, acting: 7, runway: 6 } },
-  { id: 'jan', name: 'Jan', stats: { ...BASE_STATS, singing: 10, dance: 8, acting: 7, runway: 7, charisma: 6, comedy: 5 } },
-  { id: 'brita', name: 'Brita', stats: { ...BASE_STATS, dance: 7, acting: 6, branding: 6, lipsync: 7, comedy: 5, runway: 5 } },
-  { id: 'aiden', name: 'Aiden Zhane', stats: { ...BASE_STATS, acting: 7, design: 6, charisma: 4, improv: 3, comedy: 3, dance: 2 } },
-  { id: 'nicky', name: 'Nicky Doll', stats: { ...BASE_STATS, design: 9, runway: 10, makeover: 8, acting: 3, improv: 2, comedy: 2 } },
-  { id: 'rock', name: 'Rock M. Sakura', stats: { ...BASE_STATS, dance: 8, design: 6, charisma: 7, runway: 6, improv: 4, acting: 4 } },
-  { id: 'dahlia', name: 'Dahlia Sin', stats: { ...BASE_STATS, runway: 8, design: 5, charisma: 3, acting: 2, comedy: 2, lipsync: 3 } },
-  { id: 'sherry', name: 'Sherry Pie', stats: { ...BASE_STATS, acting: 9, comedy: 9, improv: 8, branding: 7, runway: 6, lipsync: 4 } },
-];
-
 const QUEEN_IMAGE_OVERRIDES: Record<string, string> = {
-  // Provide direct image URLs to replace the generated avatars, e.g.:
+  akeria: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/3/39/A%27KeriaCDavenportS11CastMug.png',
+  ariel: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/7/77/ArielVersaceS11CastMug.png',
+  brooke: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/1/1d/BrookeLynnHytesS11CastMug.png',
+  honey: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/e/e4/HoneyDavenportS11CastMug.png',
+  kahanna: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/a/a6/KahannaMontreseS11CastMug.png',
+  mercedes: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/9/93/MercedesImanDiamondS11CastMug.png',
+  nina: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/1/11/NinaWestS11CastMug.png',
+  plastique: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/e/e5/PlastiqueTiaraS11CastMug.png',
+  rajah: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/a/af/Ra%27JahOHaraS11CastMug.png',
+  scarlet: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/4/45/ScarletEnvyS11CastMug.png',
+  shuga: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/4/47/ShugaCainS11CastMug.png',
+  silky: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/c/cf/SilkyNutmegGanacheS11CastMug.png',
+  soju: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/6/60/SojuS11CastMug.png',
+  vanjie: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/3/31/MissVanjieS11CastMug.png',
+  yvie: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/e/e2/YvieOddlyS11CastMug.png',
   jaida: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/8/8e/JaidaEssenceHallS12CastMug.png',
+  gigi: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/b/b8/GigiGoodeS12CastMug.png',
+  crystal: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/d/d8/CrystalMethydS12CastMug.png',
+  jackie: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/e/e7/JackieCoxS12CastMug.png',
+  heidi: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/5/56/HeidiNClosetS12CastMug.png',
+  widow: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/3/3d/WidowVon%27DuS12CastMug.png',
+  jan: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/a/a9/JanS12CastMug.png',
+  brita: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/3/3e/BritaS12CastMug.png',
   aiden: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/2/26/AidenZhaneS12CastMug.png',
-    gigi: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/b/b8/GigiGoodeS12CastMug.png',
-      crystal: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/d/d8/CrystalMethydS12CastMug.png',
-        dahlia: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/6/6a/DahliaSinS12CastMug.png',
-          brita: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/3/3e/BritaS12CastMug.png',
-            jan: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/a/a9/JanS12CastMug.png',
-              heidi: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/5/56/HeidiNClosetS12CastMug.png',
-                widow: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/3/3d/WidowVon%27DuS12CastMug.png',
-                  nicky: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/5/5f/NickyDollS12CastMug.png',
-                    rock: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/d/dd/RockMSakuraS12CastMug.png',
-                      sherry: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/e/ea/SherryPieS12CastMug.png',
-                                            jackie: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/e/e7/JackieCoxS12CastMug.png',
+  nicky: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/5/5f/NickyDollS12CastMug.png',
+  rock: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/d/dd/RockMSakuraS12CastMug.png',
+  dahlia: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/6/6a/DahliaSinS12CastMug.png',
+  sherry: 'https://static.wikia.nocookie.net/logosrupaulsdragrace/images/e/ea/SherryPieS12CastMug.png',
 };
 
-const EPISODES: Episode[] = [
-  { number: 1, title: "I'm That Bitch", challengeType: 'mix', challengeStats: ['dance', 'runway', 'charisma'], description: "Split Premiere Group A: Write a verse and perform choreo.", isPremiere: true, isSplitPremiereA: true, noElimination: true },
-  { number: 2, title: "You Don't Know Me", challengeType: 'mix', challengeStats: ['acting', 'dance', 'charisma'], description: "Split Premiere Group B: Fosse-inspired musical number.", isPremiere: true, isSplitPremiereB: true, noElimination: true },
-  { number: 3, title: "World's Worst", challengeType: 'acting', challengeStats: ['acting', 'improv'], description: "Improv talent show for acts with no talent." },
-  { number: 4, title: "The Ball Ball", challengeType: 'design', challengeStats: ['design', 'runway'], description: "Serve 3 looks: Lady Baller, Basketball Wife, and Balls to the Wall eleganza." },
-  { number: 5, title: "Gay's Anatomy", challengeType: 'acting', challengeStats: ['acting'], description: "Medical drama scripted acting challenge." },
-  { number: 6, title: "Snatch Game", challengeType: 'comedy', challengeStats: ['improv', 'comedy', 'charisma'], description: "Celebrity impersonation game show." },
-  { number: 7, title: "Madonna: The Unauthorized Rusical", challengeType: 'mix', challengeStats: ['singing', 'dance', 'lipsync'], description: "Live singing and dancing musical tribute to Madonna." },
-  { number: 8, title: "Droop", challengeType: 'branding', challengeStats: ['branding', 'improv'], description: "Create and market a lifestyle brand product." },
-  { number: 9, title: "Choices 2020", challengeType: 'comedy', challengeStats: ['comedy', 'acting', 'improv'], description: "Political debate improvisation." },
-  { number: 10, title: "Superfan Makeover", challengeType: 'makeover', challengeStats: ['makeover', 'runway', 'charisma'], description: "Transform drag superfans into your drag daughters." },
-  { number: 11, title: "One-Queen Show", challengeType: 'comedy', challengeStats: ['comedy', 'branding', 'charisma'], description: "Write and perform a solo comedy show." },
-  { number: 12, title: "Viva Drag Vegas", challengeType: 'mix', challengeStats: ['dance', 'singing', 'lipsync', 'charisma'], description: "Perform a Las Vegas medley number. (Top 5)" },
-  { number: 13, title: "Grand Finale", challengeType: 'mix', challengeStats: ['charisma', 'lipsync', 'runway'], description: "The final lip sync for the crown.", isFinale: true },
-];
+const SEASON_IDS = ['s11', 's12'] as const;
+type SeasonKey = typeof SEASON_IDS[number];
+
+interface SeasonConfig {
+  id: SeasonKey;
+  shortCode: string;
+  label: string;
+  description: string;
+  cast: Partial<Queen>[];
+  episodes: Episode[];
+}
+
+const SEASONS: Record<SeasonKey, SeasonConfig> = {
+  s11: {
+    id: 's11',
+    shortCode: 'S11',
+    label: 'Season 11',
+    description: 'All hail the oddballs and pageant legends alike.',
+    cast: [
+      { id: 'akeria', name: "A'keria C. Davenport", stats: { ...BASE_STATS, design: 8, runway: 8, dance: 7, charisma: 8, lipsync: 7, improv: 6 } },
+      { id: 'ariel', name: 'Ariel Versace', stats: { ...BASE_STATS, runway: 8, design: 6, dance: 6, charisma: 7, acting: 6, singing: 5 } },
+      { id: 'brooke', name: 'Brooke Lynn Hytes', stats: { ...BASE_STATS, dance: 10, runway: 9, lipsync: 9, design: 7, charisma: 7, improv: 6 } },
+      { id: 'honey', name: 'Honey Davenport', stats: { ...BASE_STATS, singing: 7, charisma: 6, runway: 6, design: 6, comedy: 5, branding: 5 } },
+      { id: 'kahanna', name: 'Kahanna Montrese', stats: { ...BASE_STATS, dance: 8, lipsync: 7, runway: 7, design: 5, charisma: 6, acting: 4 } },
+      { id: 'mercedes', name: 'Mercedes Iman Diamond', stats: { ...BASE_STATS, runway: 6, charisma: 6, dance: 5, lipsync: 6, acting: 4, improv: 4 } },
+      { id: 'nina', name: 'Nina West', stats: { ...BASE_STATS, comedy: 9, acting: 8, improv: 8, branding: 7, singing: 6, lipsync: 6 } },
+      { id: 'plastique', name: 'Plastique Tiara', stats: { ...BASE_STATS, design: 9, runway: 9, charisma: 7, dance: 6, acting: 5, makeover: 7 } },
+      { id: 'rajah', name: "Ra'Jah O'Hara", stats: { ...BASE_STATS, dance: 8, runway: 7, design: 6, charisma: 6, improv: 5, lipsync: 7 } },
+      { id: 'scarlet', name: 'Scarlet Envy', stats: { ...BASE_STATS, runway: 8, design: 7, acting: 7, improv: 7, charisma: 7, singing: 6 } },
+      { id: 'shuga', name: 'Shuga Cain', stats: { ...BASE_STATS, singing: 8, comedy: 7, improv: 7, runway: 6, branding: 6, charisma: 7 } },
+      { id: 'silky', name: 'Silky Nutmeg Ganache', stats: { ...BASE_STATS, charisma: 10, comedy: 8, branding: 8, improv: 7, singing: 6, runway: 5 } },
+      { id: 'soju', name: 'Soju', stats: { ...BASE_STATS, charisma: 5, comedy: 4, dance: 3, runway: 4, acting: 4, lipsync: 4 } },
+      { id: 'vanjie', name: 'Vanessa Vanjie Mateo', stats: { ...BASE_STATS, charisma: 9, dance: 8, lipsync: 8, runway: 6, improv: 6, comedy: 5 } },
+      { id: 'yvie', name: 'Yvie Oddly', stats: { ...BASE_STATS, design: 8, runway: 8, dance: 9, improv: 7, charisma: 8, lipsync: 8 } },
+    ],
+    episodes: [
+      { number: 1, title: "Whatcha Unpackin'?", challengeType: 'mix', challengeStats: ['design', 'runway', 'charisma'], description: 'Photo shoots, runways, and a monster ball tease to kick off the season.', isPremiere: true },
+      { number: 2, title: 'Good God Girl, Get Out', challengeType: 'acting', challengeStats: ['acting', 'comedy'], description: 'Act in a parody of a sketchy televangelist show.' },
+      { number: 3, title: 'Diva Worship', challengeType: 'mix', challengeStats: ['singing', 'charisma', 'improv'], description: 'Host a live variety talk show about iconic divas.' },
+      { number: 4, title: 'Trump: The Rusical', challengeType: 'mix', challengeStats: ['singing', 'dance', 'acting'], description: 'Perform in a political Rusical extravaganza.' },
+      { number: 5, title: 'Monster Ball', challengeType: 'design', challengeStats: ['design', 'runway'], description: 'Serve three spooky looks on the main stage.' },
+      { number: 6, title: 'The Draglympics', challengeType: 'dance', challengeStats: ['dance', 'lipsync', 'charisma'], description: 'Compete in choreographed drag athletic events.' },
+      { number: 7, title: 'From Farm to Runway', challengeType: 'design', challengeStats: ['design', 'comedy', 'branding'], description: 'Turn farm fashion into haute couture with a side of camp.' },
+      { number: 8, title: 'Snatch Game', challengeType: 'comedy', challengeStats: ['improv', 'comedy', 'charisma'], description: 'Impersonate celebrities for the iconic Snatch Game.' },
+      { number: 9, title: 'L.A.D.P.!', challengeType: 'acting', challengeStats: ['acting', 'improv', 'comedy'], description: 'Film a parody of a daytime cop procedural.' },
+      { number: 10, title: 'Dragracadabra', challengeType: 'branding', challengeStats: ['branding', 'charisma', 'improv'], description: 'Sell an original magical product with flair.' },
+      { number: 11, title: 'Bring Back My Ghouls', challengeType: 'makeover', challengeStats: ['makeover', 'runway', 'charisma'], description: 'Make over eliminated queens for a spooky spectacular.' },
+      { number: 12, title: 'Queens Everywhere', challengeType: 'mix', challengeStats: ['singing', 'dance', 'lipsync', 'branding'], description: 'Write verses and star in a queer club track.' },
+      { number: 13, title: 'Reunited', challengeType: 'mix', challengeStats: ['charisma', 'branding'], description: 'Hash out the drama before the finale.', noElimination: true },
+      { number: 14, title: 'Grand Finale', challengeType: 'mix', challengeStats: ['charisma', 'lipsync', 'runway'], description: 'A final showdown for the crown.', isFinale: true },
+    ],
+  },
+  s12: {
+    id: 's12',
+    shortCode: 'S12',
+    label: 'Season 12',
+    description: 'Twelve queens (and a surprise) turn the werkroom upside down.',
+    cast: [
+      { id: 'jaida', name: 'Jaida Essence Hall', stats: { ...BASE_STATS, design: 9, runway: 10, lipsync: 8, charisma: 8, branding: 7, acting: 6 } },
+      { id: 'gigi', name: 'Gigi Goode', stats: { ...BASE_STATS, design: 10, runway: 9, comedy: 8, improv: 8, singing: 7, lipsync: 5 } },
+      { id: 'crystal', name: 'Crystal Methyd', stats: { ...BASE_STATS, charisma: 10, comedy: 8, improv: 7, makeover: 9, runway: 8, dance: 4 } },
+      { id: 'jackie', name: 'Jackie Cox', stats: { ...BASE_STATS, acting: 9, comedy: 9, improv: 8, branding: 8, lipsync: 7, design: 4 } },
+      { id: 'heidi', name: 'Heidi N Closet', stats: { ...BASE_STATS, charisma: 10, comedy: 8, lipsync: 9, acting: 7, runway: 4, design: 3 } },
+      { id: 'widow', name: "Widow Von'Du", stats: { ...BASE_STATS, dance: 9, lipsync: 10, singing: 8, comedy: 7, acting: 7, runway: 6 } },
+      { id: 'jan', name: 'Jan', stats: { ...BASE_STATS, singing: 10, dance: 8, acting: 7, runway: 7, charisma: 6, comedy: 5 } },
+      { id: 'brita', name: 'Brita', stats: { ...BASE_STATS, dance: 7, acting: 6, branding: 6, lipsync: 7, comedy: 5, runway: 5 } },
+      { id: 'aiden', name: 'Aiden Zhane', stats: { ...BASE_STATS, acting: 7, design: 6, charisma: 4, improv: 3, comedy: 3, dance: 2 } },
+      { id: 'nicky', name: 'Nicky Doll', stats: { ...BASE_STATS, design: 9, runway: 10, makeover: 8, acting: 3, improv: 2, comedy: 2 } },
+      { id: 'rock', name: 'Rock M. Sakura', stats: { ...BASE_STATS, dance: 8, design: 6, charisma: 7, runway: 6, improv: 4, acting: 4 } },
+      { id: 'dahlia', name: 'Dahlia Sin', stats: { ...BASE_STATS, runway: 8, design: 5, charisma: 3, acting: 2, comedy: 2, lipsync: 3 } },
+      { id: 'sherry', name: 'Sherry Pie', stats: { ...BASE_STATS, acting: 9, comedy: 9, improv: 8, branding: 7, runway: 6, lipsync: 4 } },
+    ],
+    episodes: [
+      { number: 1, title: "I'm That Bitch", challengeType: 'mix', challengeStats: ['dance', 'runway', 'charisma'], description: 'Split Premiere Group A: Write a verse and perform choreo.', isPremiere: true, isSplitPremiereA: true, noElimination: true },
+      { number: 2, title: "You Don't Know Me", challengeType: 'mix', challengeStats: ['acting', 'dance', 'charisma'], description: 'Split Premiere Group B: Fosse-inspired musical number.', isPremiere: true, isSplitPremiereB: true, noElimination: true },
+      { number: 3, title: "World's Worst", challengeType: 'acting', challengeStats: ['acting', 'improv'], description: 'Improv talent show for acts with no talent.' },
+      { number: 4, title: 'The Ball Ball', challengeType: 'design', challengeStats: ['design', 'runway'], description: 'Serve 3 looks: Lady Baller, Basketball Wife, and Balls to the Wall eleganza.' },
+      { number: 5, title: "Gay's Anatomy", challengeType: 'acting', challengeStats: ['acting'], description: 'Medical drama scripted acting challenge.' },
+      { number: 6, title: 'Snatch Game', challengeType: 'comedy', challengeStats: ['improv', 'comedy', 'charisma'], description: 'Celebrity impersonation game show.' },
+      { number: 7, title: 'Madonna: The Unauthorized Rusical', challengeType: 'mix', challengeStats: ['singing', 'dance', 'lipsync'], description: 'Live singing and dancing musical tribute to Madonna.' },
+      { number: 8, title: 'Droop', challengeType: 'branding', challengeStats: ['branding', 'improv'], description: 'Create and market a lifestyle brand product.' },
+      { number: 9, title: 'Choices 2020', challengeType: 'comedy', challengeStats: ['comedy', 'acting', 'improv'], description: 'Political debate improvisation.' },
+      { number: 10, title: 'Superfan Makeover', challengeType: 'makeover', challengeStats: ['makeover', 'runway', 'charisma'], description: 'Transform drag superfans into your drag daughters.' },
+      { number: 11, title: 'One-Queen Show', challengeType: 'comedy', challengeStats: ['comedy', 'branding', 'charisma'], description: 'Write and perform a solo comedy show.' },
+      { number: 12, title: 'Viva Drag Vegas', challengeType: 'mix', challengeStats: ['dance', 'singing', 'lipsync', 'charisma'], description: 'Perform a Las Vegas medley number. (Top 5)' },
+      { number: 13, title: 'Grand Finale', challengeType: 'mix', challengeStats: ['charisma', 'lipsync', 'runway'], description: 'The final lip sync for the crown.', isFinale: true },
+    ],
+  },
+};
+
+const SEASON_OPTIONS: SeasonConfig[] = Object.values(SEASONS);
 
 // --- GAME STATES ---
 type GameState = 'intro' | 'briefing' | 'simulating' | 'critiques' | 'lipsync_reveal' | 'lipsync_ongoing' | 'elimination' | 'finale_moment' | 'finale_crowned';
 
 export default function DragRaceSimulator() {
   const [gameState, setGameState] = useState<GameState>('intro');
+  const [selectedSeasonId, setSelectedSeasonId] = useState<SeasonKey>('s12');
+  const [activeSeasonId, setActiveSeasonId] = useState<SeasonKey>('s12');
   const [queens, setQueens] = useState<Queen[]>([]);
   const [currentEpIdx, setCurrentEpIdx] = useState(0);
-  
+
   // Mechanics Flags
   const [doubleShantayUsed, setDoubleShantayUsed] = useState(false);
   const [doubleSashayUsed, setDoubleSashayUsed] = useState(false);
-  const [splitGroupA, setSplitGroupA] = useState<string[]>([]);
 
   // Ep Temporary State
   const [placements, setPlacements] = useState<Record<string, Placement>>({});
@@ -136,18 +211,28 @@ export default function DragRaceSimulator() {
   const [eliminated, setEliminated] = useState<Queen | null>(null);
   const [eliminated2, setEliminated2] = useState<Queen | null>(null); // For double sashay
   const [currentStoryline, setCurrentStoryline] = useState<string>("");
+  const [producerAdjustments, setProducerAdjustments] = useState<Record<string, number>>({});
 
-  const currentEp = EPISODES[currentEpIdx];
+  const selectedSeason = SEASONS[selectedSeasonId];
+  const activeSeason = SEASONS[activeSeasonId];
+  const seasonEpisodes = activeSeason.episodes;
+  const currentEp = seasonEpisodes[currentEpIdx] ?? seasonEpisodes[seasonEpisodes.length - 1];
+  const headerSeasonLabel = gameState === 'intro' ? selectedSeason.shortCode : activeSeason.shortCode;
   const activeQueens = useMemo(() => queens.filter(q => q.status === 'active'), [queens]);
 
   // --- INITIALIZATION ---
   const startSeason = () => {
-    const fullCast: Queen[] = INITIAL_CAST_DATA.map(data => ({
+    const config = selectedSeason;
+    const episodes = config.episodes;
+
+    setActiveSeasonId(config.id);
+
+    const fullCast: Queen[] = config.cast.map(data => ({
       id: data.id!,
       name: data.name!,
       image: QUEEN_IMAGE_OVERRIDES[data.id!] || data.image || createAvatarUrl(data.name!),
       stats: data.stats as Record<Stat, number>,
-      trackRecord: Array(EPISODES.length).fill(null),
+      trackRecord: Array(episodes.length).fill(null),
       status: 'active',
       eliminatedEpisode: null,
       wins: 0,
@@ -157,35 +242,46 @@ export default function DragRaceSimulator() {
       storyline: "Ready to show the world who she is."
     }));
 
-    // Handle Split Premiere Groups randomly
-    const shuffledIds = shuffleArray(fullCast.map(q => q.id));
-    const groupA = shuffledIds.slice(0, 7);
-    setSplitGroupA(groupA);
+    const splitAIndex = episodes.findIndex(ep => ep.isSplitPremiereA);
+    const splitBIndex = episodes.findIndex(ep => ep.isSplitPremiereB);
 
-    // Pre-set GUEST placements
-    const initializedCast = fullCast.map(q => {
-      const newTR = [...q.trackRecord];
-      if (groupA.includes(q.id)) {
-        newTR[1] = 'GUEST'; // Not in ep 2
-      } else {
-        newTR[0] = 'GUEST'; // Not in ep 1
-      }
-      return { ...q, trackRecord: newTR };
-    });
+    let initializedCast = fullCast;
+    if (splitAIndex !== -1 && splitBIndex !== -1) {
+      const shuffledIds = shuffleArray(fullCast.map(q => q.id));
+      const groupSize = Math.ceil(fullCast.length / 2);
+      const groupA = new Set(shuffledIds.slice(0, groupSize));
+
+      initializedCast = fullCast.map(q => {
+        const newTR = [...q.trackRecord];
+        if (groupA.has(q.id)) {
+          newTR[splitBIndex] = 'GUEST';
+        } else {
+          newTR[splitAIndex] = 'GUEST';
+        }
+        return { ...q, trackRecord: newTR };
+      });
+    }
 
     setQueens(initializedCast);
     setCurrentEpIdx(0);
+    setPlacements({});
+    setLipsyncers([]);
+    setTop2([]);
+    setEliminated(null);
+    setEliminated2(null);
     setDoubleShantayUsed(false);
     setDoubleSashayUsed(false);
+    setCurrentStoryline('');
+    setProducerAdjustments({});
     setGameState('briefing');
   };
 
   // --- SIMULATION CORE ---
-  const getQueenScore = (queen: Queen, ep: Episode) => {
+  const getQueenScore = (queen: Queen, ep: Episode, adjustment = 0) => {
     let raw = 0;
     ep.challengeStats.forEach(s => raw += queen.stats[s]);
     let avg = raw / ep.challengeStats.length;
-    
+
     // Riggory & Variance
     let score = avg + randomFloat(-1.5, 1.5); // Base variance
     score += (queen.stats.runway * 0.15); // Runway always helps slightly
@@ -195,12 +291,12 @@ export default function DragRaceSimulator() {
     // Narrative Caps
     if (queen.wins >= 3 && randomFloat(0, 1) > 0.7) score -= 2; // harder to get 4th win
 
-    return score;
+    return score + adjustment;
   };
 
   const runEpisode = () => {
     setGameState('simulating');
-    
+
     if (currentEp.isFinale) {
       setTimeout(() => handleFinale(), 2000);
       return;
@@ -210,7 +306,8 @@ export default function DragRaceSimulator() {
     const competingQueens = activeQueens.filter(q => q.trackRecord[currentEpIdx] !== 'GUEST');
     
     // Score them
-    let scored = competingQueens.map(q => ({ q, score: getQueenScore(q, currentEp) }));
+    const adjustments = producerAdjustments;
+    let scored = competingQueens.map(q => ({ q, score: getQueenScore(q, currentEp, adjustments[q.id] || 0) }));
     scored.sort((a, b) => b.score - a.score);
 
     // Assign Placements based on format
@@ -323,6 +420,7 @@ export default function DragRaceSimulator() {
     }
 
     setPlacements(newPlacements);
+    setProducerAdjustments({});
     setTimeout(() => setGameState('critiques'), 2000);
   };
 
@@ -350,12 +448,34 @@ export default function DragRaceSimulator() {
 
     // REGULAR ELIMINATION LIPSYNC
     const [q1, q2] = lipsyncers;
-    let s1 = q1.stats.lipsync * 1.5 + randomFloat(-2, 6) + q1.favoritism*0.3;
-    let s2 = q2.stats.lipsync * 1.5 + randomFloat(-2, 6) + q2.favoritism*0.3;
+    let s1 = q1.stats.lipsync * 1.5 + randomFloat(-2, 6) + q1.favoritism * 0.3;
+    let s2 = q2.stats.lipsync * 1.5 + randomFloat(-2, 6) + q2.favoritism * 0.3;
 
     // Track record weight
     s1 += (q1.wins * 2) - (q1.bottoms * 1.5);
     s2 += (q2.wins * 2) - (q2.bottoms * 1.5);
+
+    const bottomQueens = lipsyncers.filter((q): q is Queen => Boolean(q));
+    const frontRunnerEntries = activeQueens
+      .map(queen => {
+        const positivePlacements = queen.trackRecord.filter(place => place && ['WIN', 'TOP2', 'HIGH'].includes(place)).length;
+        const negativePlacements = queen.trackRecord.filter(place => place && ['LOW', 'BTM2'].includes(place)).length;
+        const score = (queen.wins * 5) + (positivePlacements * 2) - (negativePlacements * 1.5) + Math.max(0, queen.momentum);
+        return { queen, score };
+      })
+      .sort((a, b) => b.score - a.score);
+
+    const frontRunnerSlice = Math.max(2, Math.ceil(activeQueens.length / 3));
+    const frontRunnerIds = new Set(
+      frontRunnerEntries
+        .slice(0, frontRunnerSlice)
+        .filter(({ queen, score }) => score > 0 || queen.wins > 0 || queen.trackRecord.some(place => place && ['WIN', 'TOP2', 'HIGH'].includes(place)))
+        .map(({ queen }) => queen.id)
+    );
+
+    const bothFrontRunners = bottomQueens.length === 2 && bottomQueens.every(q => frontRunnerIds.has(q.id));
+    const shouldForceDoubleShantay = !doubleShantayUsed && !currentEp.noElimination && bothFrontRunners;
+    const savedNames = bottomQueens.map(q => q.name).join(' & ') || 'these queens';
 
     setTimeout(() => {
        // CHECK TWISTS
@@ -363,10 +483,13 @@ export default function DragRaceSimulator() {
        const bothDidBad = s1 < 5 && s2 < 5;
        const closeCall = Math.abs(s1 - s2) < 2;
 
-       if (bothDidWell && closeCall && !doubleShantayUsed && activeQueens.length > 6) {
+       if (shouldForceDoubleShantay || (bothDidWell && closeCall && !doubleShantayUsed && activeQueens.length > 6)) {
          // DOUBLE SHANTAY
          setDoubleShantayUsed(true);
-         setCurrentStoryline("It was too close to call! A double shantay saves both queens.");
+         setCurrentStoryline(shouldForceDoubleShantay
+           ? `Production can't lose ${savedNames}! A forced double shantay keeps both frontrunners in the race.`
+           : `It was too close to call! A double shantay saves ${savedNames}.`
+         );
          finalizeEpisode(placements, null);
        } else if (bothDidBad && !doubleSashayUsed && activeQueens.length > 8 && !currentEp.noElimination) {
          // DOUBLE SASHAY (RARE)
@@ -424,7 +547,7 @@ export default function DragRaceSimulator() {
   };
 
   const nextEpisode = () => {
-    if (currentEpIdx < EPISODES.length - 1) {
+    if (currentEpIdx < seasonEpisodes.length - 1) {
       setCurrentEpIdx(p => p + 1);
       setGameState('briefing');
       setPlacements({});
@@ -516,7 +639,7 @@ export default function DragRaceSimulator() {
       )}>
         {queen.status === 'winner' && <Crown className="absolute top-1 right-1 h-6 w-6 text-yellow-500 animate-bounce" />}
         {queen.status === 'eliminated' && <Skull className="absolute top-2 right-2 h-4 w-4 text-gray-400" />}
-        
+
         <div className="flex flex-col items-center text-center space-y-2">
           <QueenAvatar queen={queen} size={mini ? 'sm' : 'md'} className={mini ? 'border-pink-300' : 'border-pink-200'} />
           <div className="w-full">
@@ -538,6 +661,120 @@ export default function DragRaceSimulator() {
     )
   };
 
+  const ProducerRoom = () => {
+    const eligibleQueens = activeQueens
+      .filter(q => q.trackRecord[currentEpIdx] !== 'GUEST')
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    if (!eligibleQueens.length) return null;
+
+    const hasCustomAdjustments = eligibleQueens.some(q => (producerAdjustments[q.id] || 0) !== 0);
+
+    const updateAdjustment = (queenId: string, value: number) => {
+      const clamped = Math.max(-5, Math.min(5, Math.round(value)));
+      setProducerAdjustments(prev => {
+        const next = { ...prev, [queenId]: clamped };
+        if (clamped === 0) {
+          delete next[queenId];
+        }
+        return next;
+      });
+    };
+
+    return (
+      <div className="bg-white rounded-3xl p-6 shadow-lg border-2 border-purple-100">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-3">
+            <Drama className="h-8 w-8 text-purple-500" />
+            <div>
+              <h3 className="text-2xl font-black uppercase tracking-tight">Producer Room</h3>
+              <p className="text-xs md:text-sm text-stone-500 font-semibold uppercase tracking-wide">
+                Boost or penalize queens for the upcoming challenge. Adjustments apply once.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setProducerAdjustments({})}
+            disabled={!hasCustomAdjustments}
+            className={cn(
+              "px-4 py-2 rounded-full text-xs font-black uppercase tracking-wide transition-colors",
+              hasCustomAdjustments
+                ? "bg-purple-600 text-white hover:bg-purple-700"
+                : "bg-stone-200 text-stone-400 cursor-not-allowed"
+            )}
+          >
+            Reset Adjustments
+          </button>
+        </div>
+
+        <div className="mt-6 grid gap-4 sm:grid-cols-2">
+          {eligibleQueens.map(q => {
+            const value = producerAdjustments[q.id] ?? 0;
+            return (
+              <div
+                key={q.id}
+                className={cn(
+                  "p-4 border rounded-2xl bg-stone-50/80 flex flex-col gap-4 transition-all",
+                  value !== 0 && "border-purple-300 shadow-md"
+                )}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <QueenAvatar queen={q} size="sm" className="border-purple-200" />
+                    <div>
+                      <p className="text-sm font-bold leading-tight">{q.name}</p>
+                      <p className="text-xs uppercase text-stone-500 font-semibold">
+                        {value > 0 ? '+' : ''}{value} points
+                      </p>
+                    </div>
+                  </div>
+                  {value !== 0 && (
+                    <button
+                      onClick={() => updateAdjustment(q.id, 0)}
+                      className="text-[10px] uppercase font-black tracking-wide text-purple-600 hover:text-purple-800"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => updateAdjustment(q.id, value - 1)}
+                    className="w-10 h-10 rounded-full bg-purple-100 text-purple-700 font-black text-lg hover:bg-purple-200"
+                    type="button"
+                  >
+                    -
+                  </button>
+                  <input
+                    type="range"
+                    min={-5}
+                    max={5}
+                    step={1}
+                    value={value}
+                    onChange={e => updateAdjustment(q.id, Number(e.target.value))}
+                    className="flex-1 accent-purple-600"
+                  />
+                  <button
+                    onClick={() => updateAdjustment(q.id, value + 1)}
+                    className="w-10 h-10 rounded-full bg-purple-100 text-purple-700 font-black text-lg hover:bg-purple-200"
+                    type="button"
+                  >
+                    +
+                  </button>
+                </div>
+                <div className="flex justify-between text-[10px] uppercase font-semibold text-stone-400">
+                  <span>Penalty</span>
+                  <span>Boost</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
   const TrackRecordTable = () => {
     // Sort: Active first (by best track record approx), then eliminated reversed.
     const scoreTR = (q: Queen) => (q.wins * 10) - (q.bottoms * 5) + (q.momentum * 2);
@@ -551,7 +788,7 @@ export default function DragRaceSimulator() {
           <thead>
              <tr className="bg-gray-100 text-gray-600 uppercase tracking-wider">
                <th className="p-3 text-left sticky left-0 bg-gray-100 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">Queen</th>
-               {EPISODES.map((e, i) => <th key={i} className="p-2 min-w-[40px]">{e.isFinale ? 'FINALE' : i+1}</th>)}
+               {seasonEpisodes.map((e, i) => <th key={i} className="p-2 min-w-[40px]">{e.isFinale ? 'FINALE' : i + 1}</th>)}
              </tr>
           </thead>
           <tbody>
@@ -585,8 +822,16 @@ export default function DragRaceSimulator() {
       
       {/* TOP NAV */}
       <header className="bg-black text-white py-4 px-6 sticky top-0 z-30 flex justify-between items-center shadow-lg">
-        <div className="flex items-center gap-2 font-black tracking-tighter text-xl md:text-2xl italic bg-clip-text text-transparent bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500">
-          <Flame className="text-pink-500" /> RU-SIMULATOR S12
+        <div className="flex items-center gap-3">
+          <Flame className="text-pink-500" />
+          <div className="flex flex-col leading-tight">
+            <span className="font-black tracking-tighter text-xl md:text-2xl italic bg-clip-text text-transparent bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500">
+              RU-SIMULATOR {headerSeasonLabel}
+            </span>
+            <span className="text-[10px] uppercase tracking-[0.3em] text-stone-400 font-semibold">
+              {gameState === 'intro' ? selectedSeason.label : activeSeason.label}
+            </span>
+          </div>
         </div>
         {gameState !== 'intro' && (
           <div className="text-xs md:text-sm font-bold text-stone-400 uppercase">
@@ -603,15 +848,41 @@ export default function DragRaceSimulator() {
             <h1 className="text-6xl md:text-8xl font-black text-center tracking-tighter leading-none">
               START YOUR<br/><span className="text-pink-600">ENGINES</span>
             </h1>
+            <div className="space-y-3 text-center">
+              <p className="text-xs md:text-sm uppercase tracking-[0.4em] text-stone-400 font-semibold">Choose Your Season</p>
+              <div className="flex flex-wrap justify-center gap-3">
+                {SEASON_OPTIONS.map(option => {
+                  const isActive = option.id === selectedSeasonId;
+                  return (
+                    <button
+                      key={option.id}
+                      onClick={() => setSelectedSeasonId(option.id)}
+                      className={cn(
+                        'px-4 py-2 rounded-full font-black uppercase tracking-wide text-xs md:text-sm transition-colors',
+                        isActive
+                          ? 'bg-pink-600 text-white shadow-lg shadow-pink-400/40'
+                          : 'bg-stone-200 text-stone-600 hover:bg-stone-300'
+                      )}
+                    >
+                      {option.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-xs md:text-sm text-stone-500 max-w-md mx-auto font-medium">{selectedSeason.description}</p>
+            </div>
             <button onClick={startSeason} className="bg-black text-white text-xl md:text-2xl px-12 py-6 rounded-full font-black hover:scale-110 hover:bg-pink-600 transition-all shadow-2xl">
               ENTER WERKROOM
             </button>
             <div className="grid grid-cols-4 md:grid-cols-7 gap-2 mt-12 opacity-80">
-               {INITIAL_CAST_DATA.map(q => (
-                 <div key={q.id} className="w-10 h-10 rounded-full overflow-hidden border border-white/60 shadow-sm" title={q.name}>
-                   <img src={(q.image as string) || createAvatarUrl(q.name!)} alt={`${q.name} avatar preview`} className="w-full h-full object-cover" loading="lazy" />
-                 </div>
-               ))}
+               {selectedSeason.cast.map(q => {
+                 const previewImage = QUEEN_IMAGE_OVERRIDES[q.id!] || q.image || createAvatarUrl(q.name!);
+                 return (
+                   <div key={q.id} className="w-10 h-10 rounded-full overflow-hidden border border-white/60 shadow-sm" title={q.name}>
+                     <img src={previewImage} alt={`${q.name} avatar preview`} className="w-full h-full object-cover" loading="lazy" />
+                   </div>
+                 );
+               })}
             </div>
           </div>
         )}
@@ -642,6 +913,12 @@ export default function DragRaceSimulator() {
                  </div>
                )}
             </div>
+
+            {gameState === 'briefing' && (
+              <div className="animate-in slide-in-from-bottom-5 duration-500">
+                <ProducerRoom />
+              </div>
+            )}
 
             {/* WORKROOM (ACTIVE QUEENS) */}
             {['briefing', 'simulating'].includes(gameState) && (
