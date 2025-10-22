@@ -134,7 +134,7 @@ const SEASONS: Record<SeasonKey, SeasonConfig> = {
       { id: 'yvie', name: 'Yvie Oddly', stats: { ...BASE_STATS, design: 8, runway: 8, dance: 9, improv: 7, charisma: 8, lipsync: 8 } },
     ],
     episodes: [
-      { number: 1, title: "Whatcha Unpackin'?", challengeType: 'mix', challengeStats: ['design', 'runway', 'charisma'], description: 'Photo shoots, runways, and a monster ball tease to kick off the season.', isPremiere: true },
+      { number: 1, title: "Whatcha Unpackin'?", challengeType: 'mix', challengeStats: ['design', 'runway', 'charisma'], description: 'Photo shoots, runways, and a monster ball tease to kick off the season.' },
       { number: 2, title: 'Good God Girl, Get Out', challengeType: 'acting', challengeStats: ['acting', 'comedy'], description: 'Act in a parody of a sketchy televangelist show.' },
       { number: 3, title: 'Diva Worship', challengeType: 'mix', challengeStats: ['singing', 'charisma', 'improv'], description: 'Host a live variety talk show about iconic divas.' },
       { number: 4, title: 'Trump: The Rusical', challengeType: 'mix', challengeStats: ['singing', 'dance', 'acting'], description: 'Perform in a political Rusical extravaganza.' },
@@ -203,6 +203,7 @@ export default function DragRaceSimulator() {
   // Mechanics Flags
   const [doubleShantayUsed, setDoubleShantayUsed] = useState(false);
   const [doubleSashayUsed, setDoubleSashayUsed] = useState(false);
+  const [plannedDoubleShantayIdx, setPlannedDoubleShantayIdx] = useState<number | null>(null);
 
   // Ep Temporary State
   const [placements, setPlacements] = useState<Record<string, Placement>>({});
@@ -271,6 +272,13 @@ export default function DragRaceSimulator() {
     setEliminated2(null);
     setDoubleShantayUsed(false);
     setDoubleSashayUsed(false);
+    const eliminationEpisodeIndices = episodes
+      .map((episode, index) => ({ episode, index }))
+      .filter(({ episode }) => !episode.noElimination && !episode.isFinale);
+    const forcedDoubleIndex = eliminationEpisodeIndices.length
+      ? eliminationEpisodeIndices[0].index
+      : null;
+    setPlannedDoubleShantayIdx(forcedDoubleIndex);
     setCurrentStoryline('');
     setProducerAdjustments({});
     setGameState('briefing');
@@ -473,8 +481,12 @@ export default function DragRaceSimulator() {
         .map(({ queen }) => queen.id)
     );
 
-    const bothFrontRunners = bottomQueens.length === 2 && bottomQueens.every(q => frontRunnerIds.has(q.id));
-    const shouldForceDoubleShantay = !doubleShantayUsed && !currentEp.noElimination && bothFrontRunners;
+    const hasFullBottom = bottomQueens.length === 2;
+    const isPlannedDoubleShantay =
+      plannedDoubleShantayIdx !== null && plannedDoubleShantayIdx === currentEpIdx && !currentEp.noElimination && hasFullBottom;
+    const bothFrontRunners = hasFullBottom && bottomQueens.every(q => frontRunnerIds.has(q.id));
+    const shouldForceDoubleShantay =
+      !doubleShantayUsed && !currentEp.noElimination && hasFullBottom && (bothFrontRunners || isPlannedDoubleShantay);
     const savedNames = bottomQueens.map(q => q.name).join(' & ') || 'these queens';
 
     setTimeout(() => {
@@ -486,10 +498,16 @@ export default function DragRaceSimulator() {
        if (shouldForceDoubleShantay || (bothDidWell && closeCall && !doubleShantayUsed && activeQueens.length > 6)) {
          // DOUBLE SHANTAY
          setDoubleShantayUsed(true);
-         setCurrentStoryline(shouldForceDoubleShantay
-           ? `Production can't lose ${savedNames}! A forced double shantay keeps both frontrunners in the race.`
-           : `It was too close to call! A double shantay saves ${savedNames}.`
-         );
+         setPlannedDoubleShantayIdx(null);
+         let storyline: string;
+         if (shouldForceDoubleShantay && bothFrontRunners) {
+           storyline = `Production can't lose ${savedNames}! A forced double shantay keeps both frontrunners in the race.`;
+         } else if (shouldForceDoubleShantay && isPlannedDoubleShantay) {
+           storyline = `Ru promised a double shantay this season, and ${savedNames} seize the moment to stay another week.`;
+         } else {
+           storyline = `It was too close to call! A double shantay saves ${savedNames}.`;
+         }
+         setCurrentStoryline(storyline);
          finalizeEpisode(placements, null);
        } else if (bothDidBad && !doubleSashayUsed && activeQueens.length > 8 && !currentEp.noElimination) {
          // DOUBLE SASHAY (RARE)
