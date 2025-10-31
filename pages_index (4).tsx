@@ -1024,75 +1024,75 @@ export default function DragRaceSimulator() {
                </div>
             )}
 
-            {/* LIPSYNC ARENA */}
-            {['lipsync_reveal', 'lipsync_ongoing'].includes(gameState) && (
-               <div className="fixed inset-0 z-50 bg-black/95 flex flex-col items-center justify-center p-6 text-white animate-in fade-in duration-300">
-                  <h2 className="text-3xl md:text-5xl font-black text-red-600 uppercase mb-12 animate-pulse">
-                    {currentEp.isPremiere ? "Lip Sync For The Win" : "Lip Sync For Your Life"}
-                  </h2>
-                  <div className="flex items-center gap-8 md:gap-16">
-                     <div className="text-center">
-                       <QueenAvatar
-                         queen={currentEp.isPremiere ? top2[0] : lipsyncers[0]}
-                         size="xl"
-                         className="border-red-500 shadow-[0_0_25px_rgba(248,113,113,0.45)]"
-                       />
-                       <h3 className="mt-4 text-xl md:text-3xl font-bold">{currentEp.isPremiere ? top2[0]?.name : lipsyncers[0]?.name}</h3>
-                     </div>
-                     <div className="text-4xl md:text-6xl font-black text-stone-600 italic">VS</div>
-                     <div className="text-center">
-                       <QueenAvatar
-                         queen={currentEp.isPremiere ? top2[1] : lipsyncers[1]}
-                         size="xl"
-                         className="border-red-500 shadow-[0_0_25px_rgba(248,113,113,0.45)]"
-                       />
-                       <h3 className="mt-4 text-xl md:text-3xl font-bold">{currentEp.isPremiere ? top2[1]?.name : lipsyncers[1]?.name}</h3>
-                     </div>
+          </div>
+        )}
+
+        {/* LIPSYNC ARENA */}
+        {['lipsync_reveal', 'lipsync_ongoing'].includes(gameState) && (
+           <div className="fixed inset-0 z-50 bg-black/95 flex flex-col items-center justify-center p-6 text-white animate-in fade-in duration-300">
+              <h2 className="text-3xl md:text-5xl font-black text-red-600 uppercase mb-12 animate-pulse">
+                {currentEp.isPremiere ? "Lip Sync For The Win" : "Lip Sync For Your Life"}
+              </h2>
+              <div className="flex items-center gap-8 md:gap-16">
+                 <div className="text-center">
+                   <QueenAvatar
+                     queen={currentEp.isPremiere ? top2[0] : lipsyncers[0]}
+                     size="xl"
+                     className="border-red-500 shadow-[0_0_25px_rgba(248,113,113,0.45)]"
+                   />
+                   <h3 className="mt-4 text-xl md:text-3xl font-bold">{currentEp.isPremiere ? top2[0]?.name : lipsyncers[0]?.name}</h3>
+                 </div>
+                 <div className="text-4xl md:text-6xl font-black text-stone-600 italic">VS</div>
+                 <div className="text-center">
+                   <QueenAvatar
+                     queen={currentEp.isPremiere ? top2[1] : lipsyncers[1]}
+                     size="xl"
+                     className="border-red-500 shadow-[0_0_25px_rgba(248,113,113,0.45)]"
+                   />
+                   <h3 className="mt-4 text-xl md:text-3xl font-bold">{currentEp.isPremiere ? top2[1]?.name : lipsyncers[1]?.name}</h3>
+                 </div>
+              </div>
+
+              {gameState === 'lipsync_reveal' ? (
+                <button onClick={runLipsync} className="mt-16 px-12 py-4 bg-white text-black text-xl font-black rounded-full hover:scale-105 transition-transform">
+                  GOOD LUCK, AND DON'T F*CK IT UP
+                </button>
+              ) : (
+                <div className="mt-16 text-2xl font-black text-red-500 animate-bounce">
+                  <Mic className="inline-block mr-2" /> PERFORMING...
+                </div>
+              )}
+           </div>
+        )}
+
+        {/* ELIMINATION REVEAL MODAL */}
+        {gameState === 'elimination' && (
+           <div className="fixed inset-0 z-50 bg-red-950/95 flex flex-col items-center justify-center p-6 text-white text-center animate-in zoom-in duration-500">
+              {doubleSashayUsed && eliminated && eliminated2 ? (
+                 <>
+                  <Skull className="w-24 h-24 text-red-500 mb-4" />
+                  <h2 className="text-6xl font-black uppercase text-red-500 mb-4">DOUBLE SASHAY</h2>
+                  <p className="text-2xl md:text-4xl font-bold">{eliminated.name} &amp; {eliminated2.name}</p>
+                  <div className="flex items-center justify-center gap-6 mt-8">
+                    <QueenAvatar queen={eliminated} size="lg" className="border-red-400" />
+                    <QueenAvatar queen={eliminated2} size="lg" className="border-red-400" />
                   </div>
-                  
-                  {gameState === 'lipsync_reveal' ? (
-                    <button onClick={runLipsync} className="mt-16 px-12 py-4 bg-white text-black text-xl font-black rounded-full hover:scale-105 transition-transform">
-                      GOOD LUCK, AND DON'T F*CK IT UP
-                    </button>
-                  ) : (
-                    <div className="mt-16 text-2xl font-black text-red-500 animate-bounce">
-                      <Mic className="inline-block mr-2" /> PERFORMING...
+                 </>
+              ) : (
+                 <>
+                  <h2 className="text-4xl font-bold opacity-50 mb-2">Sashay Away...</h2>
+                  <h1 className="text-7xl md:text-9xl font-black text-red-500 tracking-tighter leading-none">{eliminated?.name}</h1>
+                  {eliminated && (
+                    <div className="mt-10">
+                      <QueenAvatar queen={eliminated} size="lg" className="border-red-400 shadow-[0_0_30px_rgba(239,68,68,0.35)]" />
                     </div>
                   )}
-               </div>
-            )}
-
-            {/* ELIMINATION REVEAL MODAL */}
-            {gameState === 'elimination' && (
-               <div className="fixed inset-0 z-50 bg-red-950/95 flex flex-col items-center justify-center p-6 text-white text-center animate-in zoom-in duration-500">
-                  {doubleSashayUsed && eliminated && eliminated2 ? (
-                     <>
-                      <Skull className="w-24 h-24 text-red-500 mb-4" />
-                      <h2 className="text-6xl font-black uppercase text-red-500 mb-4">DOUBLE SASHAY</h2>
-                      <p className="text-2xl md:text-4xl font-bold">{eliminated.name} &amp; {eliminated2.name}</p>
-                      <div className="flex items-center justify-center gap-6 mt-8">
-                        <QueenAvatar queen={eliminated} size="lg" className="border-red-400" />
-                        <QueenAvatar queen={eliminated2} size="lg" className="border-red-400" />
-                      </div>
-                     </>
-                  ) : (
-                     <>
-                      <h2 className="text-4xl font-bold opacity-50 mb-2">Sashay Away...</h2>
-                      <h1 className="text-7xl md:text-9xl font-black text-red-500 tracking-tighter leading-none">{eliminated?.name}</h1>
-                      {eliminated && (
-                        <div className="mt-10">
-                          <QueenAvatar queen={eliminated} size="lg" className="border-red-400 shadow-[0_0_30px_rgba(239,68,68,0.35)]" />
-                        </div>
-                      )}
-                     </>
-                  )}
-                  <button onClick={() => setGameState('untucked')} className="mt-16 px-8 py-3 border-2 border-white rounded-full font-bold hover:bg-white hover:text-red-950 transition-colors">
-                    CONTINUE TO UNTUCKED
-                  </button>
-               </div>
-            )}
-
-          </div>
+                 </>
+              )}
+              <button onClick={() => setGameState('untucked')} className="mt-16 px-8 py-3 border-2 border-white rounded-full font-bold hover:bg-white hover:text-red-950 transition-colors">
+                CONTINUE TO UNTUCKED
+              </button>
+           </div>
         )}
 
         {/* UNTUCKED STAGE */}
