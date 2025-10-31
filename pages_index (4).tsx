@@ -117,7 +117,7 @@ const EPISODES: Episode[] = [
 ];
 
 // --- GAME STATES ---
-type GameState = 'intro' | 'briefing' | 'simulating' | 'critiques' | 'lipsync_reveal' | 'lipsync_ongoing' | 'elimination' | 'finale_moment' | 'finale_crowned';
+type GameState = 'intro' | 'entrances' | 'promo_chart' | 'challenge_announcement' | 'challenge_performances' | 'results' | 'lipsync_reveal' | 'lipsync_ongoing' | 'elimination' | 'untucked' | 'finale_moment' | 'finale_crowned';
 
 export default function DragRaceSimulator() {
   const [gameState, setGameState] = useState<GameState>('intro');
@@ -137,6 +137,7 @@ export default function DragRaceSimulator() {
   const [eliminated2, setEliminated2] = useState<Queen | null>(null); // For double sashay
   const [currentStoryline, setCurrentStoryline] = useState<string>("");
   const [producerAdjustments, setProducerAdjustments] = useState<Record<string, number>>({});
+  const [manualPlacements, setManualPlacements] = useState<Record<string, Placement>>({});
 
   const currentEp = EPISODES[currentEpIdx];
   const activeQueens = useMemo(() => queens.filter(q => q.status === 'active'), [queens]);
@@ -178,8 +179,9 @@ export default function DragRaceSimulator() {
     setCurrentEpIdx(0);
     setDoubleShantayUsed(false);
     setDoubleSashayUsed(false);
-    setGameState('briefing');
+    setGameState('entrances'); // Start with entrances for EP1
     setProducerAdjustments({});
+    setManualPlacements({});
   };
 
   // --- SIMULATION CORE ---
@@ -201,7 +203,7 @@ export default function DragRaceSimulator() {
   };
 
   const runEpisode = () => {
-    setGameState('simulating');
+    setGameState('challenge_performances');
 
     if (currentEp.isFinale) {
       setTimeout(() => handleFinale(), 2000);
@@ -210,8 +212,32 @@ export default function DragRaceSimulator() {
 
     // Filter queens competing THIS episode
     const competingQueens = activeQueens.filter(q => q.trackRecord[currentEpIdx] !== 'GUEST');
-    
-    // Score them
+
+    // Check if producer manually set all placements
+    const hasManualPlacements = Object.keys(manualPlacements).length > 0;
+
+    if (hasManualPlacements) {
+      // Use manual placements
+      setPlacements(manualPlacements);
+      setManualPlacements({});
+
+      // Determine lipsyncers from manual placements
+      const bottomQueens = competingQueens.filter(q => manualPlacements[q.id] === 'BTM2');
+      const topQueens = competingQueens.filter(q => manualPlacements[q.id] === 'TOP2');
+
+      if (currentEp.isPremiere) {
+        setTop2(topQueens);
+        setLipsyncers([]);
+      } else {
+        setTop2([]);
+        setLipsyncers(bottomQueens);
+      }
+
+      setTimeout(() => setGameState('results'), 2000);
+      return;
+    }
+
+    // Score them automatically
     const adjustments = producerAdjustments;
     let scored = competingQueens.map(q => ({ q, score: getQueenScore(q, currentEp, adjustments[q.id] || 0) }));
     scored.sort((a, b) => b.score - a.score);
@@ -327,7 +353,7 @@ export default function DragRaceSimulator() {
 
     setPlacements(newPlacements);
     setProducerAdjustments({});
-    setTimeout(() => setGameState('critiques'), 2000);
+    setTimeout(() => setGameState('results'), 2000);
   };
 
   // --- LIPSYNC LOGIC ---
@@ -426,9 +452,9 @@ export default function DragRaceSimulator() {
     }));
 
     if (!elimIds) {
-      // If no elimination immediately shown, wait then next episode (e.g. double shantay or premiere)
+      // If no elimination immediately shown, wait then go to untucked (e.g. double shantay or premiere)
       if (gameState !== 'elimination') { // if not already in elim state (double shantay jumps here)
-          setTimeout(nextEpisode, 4000);
+          setTimeout(() => setGameState('untucked'), 4000);
       }
     }
   };
@@ -436,12 +462,13 @@ export default function DragRaceSimulator() {
   const nextEpisode = () => {
     if (currentEpIdx < EPISODES.length - 1) {
       setCurrentEpIdx(p => p + 1);
-      setGameState('briefing');
+      setGameState('promo_chart'); // Always go to promo chart for subsequent episodes
       setPlacements({});
       setLipsyncers([]);
       setTop2([]);
       setEliminated(null); setEliminated2(null);
       setCurrentStoryline("");
+      setManualPlacements({});
     }
   };
 
@@ -555,18 +582,23 @@ export default function DragRaceSimulator() {
 
     if (!eligibleQueens.length) return null;
 
-    const hasCustomAdjustments = eligibleQueens.some(q => (producerAdjustments[q.id] || 0) !== 0);
+    const hasManualOverrides = Object.keys(manualPlacements).length > 0;
 
-    const updateAdjustment = (queenId: string, value: number) => {
-      const clamped = Math.max(-5, Math.min(5, Math.round(value)));
-      setProducerAdjustments(prev => {
-        const next = { ...prev, [queenId]: clamped };
-        if (clamped === 0) {
+    const updatePlacement = (queenId: string, placement: Placement | null) => {
+      setManualPlacements(prev => {
+        const next = { ...prev };
+        if (placement === null) {
           delete next[queenId];
+        } else {
+          next[queenId] = placement;
         }
         return next;
       });
     };
+
+    const availablePlacements: Placement[] = currentEp.isPremiere
+      ? ['TOP2', 'SAFE', 'LOW']
+      : ['WIN', 'HIGH', 'SAFE', 'LOW', 'BTM2'];
 
     return (
       <div className="bg-white rounded-3xl p-6 shadow-lg border-2 border-purple-100">
@@ -576,84 +608,104 @@ export default function DragRaceSimulator() {
             <div>
               <h3 className="text-2xl font-black uppercase tracking-tight">Producer Room</h3>
               <p className="text-xs md:text-sm text-stone-500 font-semibold uppercase tracking-wide">
-                Boost or penalize queens for the upcoming challenge. Adjustments apply once.
+                Override placements for this episode. Set each queen's result manually.
               </p>
             </div>
           </div>
           <button
-            onClick={() => setProducerAdjustments({})}
-            disabled={!hasCustomAdjustments}
+            onClick={() => setManualPlacements({})}
+            disabled={!hasManualOverrides}
             className={cn(
               "px-4 py-2 rounded-full text-xs font-black uppercase tracking-wide transition-colors",
-              hasCustomAdjustments
+              hasManualOverrides
                 ? "bg-purple-600 text-white hover:bg-purple-700"
                 : "bg-stone-200 text-stone-400 cursor-not-allowed"
             )}
           >
-            Reset Adjustments
+            Clear Overrides
           </button>
         </div>
 
-        <div className="mt-6 grid gap-4 sm:grid-cols-2">
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {eligibleQueens.map(q => {
-            const value = producerAdjustments[q.id] ?? 0;
+            const selectedPlacement = manualPlacements[q.id];
+            // Show mini track record - last 5 episodes
+            const pastEpisodes = q.trackRecord.slice(0, currentEpIdx).filter(p => p !== null && p !== 'GUEST');
+            const recentRecord = pastEpisodes.slice(-5);
+
             return (
               <div
                 key={q.id}
                 className={cn(
-                  "p-4 border rounded-2xl bg-stone-50/80 flex flex-col gap-4 transition-all",
-                  value !== 0 && "border-purple-300 shadow-md"
+                  "p-4 border-2 rounded-2xl bg-gradient-to-br from-white to-stone-50 flex flex-col gap-3 transition-all",
+                  selectedPlacement ? "border-purple-400 shadow-lg ring-2 ring-purple-200" : "border-stone-200 hover:border-purple-200"
                 )}
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <QueenAvatar queen={q} size="sm" className="border-purple-200" />
-                    <div>
-                      <p className="text-sm font-bold leading-tight">{q.name}</p>
-                      <p className="text-xs uppercase text-stone-500 font-semibold">
-                        {value > 0 ? '+' : ''}{value} points
-                      </p>
+                <div className="flex items-center gap-3">
+                  <QueenAvatar queen={q} size="sm" className="border-purple-200" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold leading-tight truncate">{q.name}</p>
+                    <div className="flex items-center gap-2 text-xs text-stone-500 mt-1">
+                      <span className="flex items-center gap-1">
+                        <Trophy className="h-3 w-3 text-yellow-500"/>{q.wins}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Frown className="h-3 w-3 text-red-500"/>{q.bottoms}
+                      </span>
                     </div>
                   </div>
-                  {value !== 0 && (
-                    <button
-                      onClick={() => updateAdjustment(q.id, 0)}
-                      className="text-[10px] uppercase font-black tracking-wide text-purple-600 hover:text-purple-800"
-                    >
-                      Clear
-                    </button>
-                  )}
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => updateAdjustment(q.id, value - 1)}
-                    className="w-10 h-10 rounded-full bg-purple-100 text-purple-700 font-black text-lg hover:bg-purple-200"
-                    type="button"
-                  >
-                    -
-                  </button>
-                  <input
-                    type="range"
-                    min={-5}
-                    max={5}
-                    step={1}
-                    value={value}
-                    onChange={e => updateAdjustment(q.id, Number(e.target.value))}
-                    className="flex-1 accent-purple-600"
-                  />
-                  <button
-                    onClick={() => updateAdjustment(q.id, value + 1)}
-                    className="w-10 h-10 rounded-full bg-purple-100 text-purple-700 font-black text-lg hover:bg-purple-200"
-                    type="button"
-                  >
-                    +
-                  </button>
+                {/* Cute Mini Track Record */}
+                {recentRecord.length > 0 && (
+                  <div className="bg-stone-100 rounded-lg p-2">
+                    <p className="text-[9px] uppercase font-bold text-stone-400 mb-1.5">Recent Track</p>
+                    <div className="flex gap-1 justify-center">
+                      {recentRecord.map((placement, idx) => (
+                        <div
+                          key={idx}
+                          className={cn(
+                            "w-6 h-6 rounded text-[8px] font-black flex items-center justify-center",
+                            getPlaceColor(placement)
+                          )}
+                          title={placement || ''}
+                        >
+                          {placement === 'TOP2' ? 'T2' : placement === 'BTM2' ? 'B2' : placement}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Placement Selection */}
+                <div className="flex flex-col gap-2">
+                  <p className="text-[10px] uppercase font-bold text-stone-400">Set Placement</p>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {availablePlacements.map(placement => (
+                      <button
+                        key={placement}
+                        onClick={() => updatePlacement(q.id, selectedPlacement === placement ? null : placement)}
+                        className={cn(
+                          "px-2 py-1.5 rounded text-[10px] font-black uppercase transition-all",
+                          selectedPlacement === placement
+                            ? cn(getPlaceColor(placement), "ring-2 ring-purple-500 scale-105")
+                            : "bg-stone-100 text-stone-500 hover:bg-stone-200"
+                        )}
+                      >
+                        {placement === 'TOP2' ? 'T2' : placement === 'BTM2' ? 'B2' : placement}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <div className="flex justify-between text-[10px] uppercase font-semibold text-stone-400">
-                  <span>Penalty</span>
-                  <span>Boost</span>
-                </div>
+
+                {selectedPlacement && (
+                  <div className={cn(
+                    "text-center text-xs font-black uppercase py-1.5 rounded-lg",
+                    getPlaceColor(selectedPlacement)
+                  )}>
+                    Override: {selectedPlacement === 'TOP2' ? 'TOP 2' : selectedPlacement === 'BTM2' ? 'BTM 2' : selectedPlacement}
+                  </div>
+                )}
               </div>
             );
           })}
@@ -740,10 +792,71 @@ export default function DragRaceSimulator() {
           </div>
         )}
 
-        {/* BRIEFING & MAIN GAME LOOP */}
-        {gameState !== 'intro' && gameState !== 'finale_crowned' && (
+        {/* ENTRANCES (EP1 ONLY) */}
+        {gameState === 'entrances' && currentEp.number === 1 && (
+          <div className="space-y-12 animate-in fade-in zoom-in duration-1000">
+            <div className="bg-gradient-to-br from-pink-100 via-purple-100 to-blue-100 rounded-3xl p-12 shadow-2xl text-center">
+              <h1 className="text-5xl md:text-7xl font-black uppercase tracking-tight mb-6 bg-clip-text text-transparent bg-gradient-to-r from-pink-600 via-purple-600 to-blue-600">
+                ENTRANCES
+              </h1>
+              <p className="text-xl md:text-2xl font-bold text-stone-700 mb-12">
+                The queens make their grand entrance into the werkroom! ✨
+              </p>
+
+              <div className="grid grid-cols-3 md:grid-cols-5 gap-8 max-w-5xl mx-auto">
+                {queens.map((q, idx) => (
+                  <div key={q.id} className="animate-in slide-in-from-bottom duration-700" style={{ animationDelay: `${idx * 100}ms` }}>
+                    <QueenAvatar queen={q} size="lg" className="border-pink-300 shadow-xl" />
+                    <p className="text-sm font-bold mt-3 text-center">{q.name}</p>
+                  </div>
+                ))}
+              </div>
+
+              <button
+                onClick={() => setGameState('promo_chart')}
+                className="mt-12 bg-gradient-to-r from-pink-600 to-purple-600 text-white px-12 py-5 rounded-2xl font-black text-xl hover:scale-105 transition-transform shadow-xl"
+              >
+                CONTINUE TO PROMO LOOKS
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* PROMO CHART */}
+        {gameState === 'promo_chart' && (
+          <div className="space-y-8 animate-in fade-in duration-700">
+            <div className="bg-white rounded-3xl p-8 shadow-xl border-2 border-stone-100 text-center relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500" />
+              <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tight mb-4">
+                PROMO LOOKS
+              </h2>
+              <p className="text-lg text-stone-500 font-medium">
+                The queens serve their best promo looks for Season 12!
+              </p>
+            </div>
+
+            <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-7 gap-6">
+              {activeQueens.map(q => (
+                <div key={q.id} className="flex flex-col items-center gap-2">
+                  <QueenAvatar queen={q} size="md" className="border-purple-300 hover:scale-110 transition-transform" />
+                  <p className="text-xs font-bold text-center">{q.name}</p>
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={() => setGameState('challenge_announcement')}
+              className="w-full bg-black text-white py-6 rounded-2xl font-black text-2xl uppercase hover:bg-pink-600 transition-colors"
+            >
+              ANNOUNCE THIS WEEK'S CHALLENGE
+            </button>
+          </div>
+        )}
+
+        {/* CHALLENGE ANNOUNCEMENT & MAIN GAME LOOP */}
+        {['challenge_announcement', 'challenge_performances', 'results'].includes(gameState) && (
           <div className="space-y-12">
-            
+
             {/* EPISODE INFO CARD */}
             <div className="bg-white rounded-3xl p-8 shadow-xl border-2 border-stone-100 text-center relative overflow-hidden">
                <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500" />
@@ -755,26 +868,26 @@ export default function DragRaceSimulator() {
                  ))}
                </div>
 
-               {gameState === 'briefing' && (
+               {gameState === 'challenge_announcement' && (
                  <button onClick={runEpisode} className="mt-8 bg-pink-600 text-white px-8 py-4 rounded-xl font-black text-lg hover:bg-pink-700 hover:shadow-lg transition-all animate-bounce">
                    BRING IT TO THE RUNWAY
                  </button>
                )}
-               {gameState === 'simulating' && (
+               {gameState === 'challenge_performances' && (
                  <div className="mt-8 text-2xl font-black text-pink-500 animate-pulse flex justify-center items-center gap-2">
-                   <Sparkles className="animate-spin" /> SERVING LOOKS... 
+                   <Sparkles className="animate-spin" /> SERVING LOOKS...
                  </div>
                )}
             </div>
 
-            {gameState === 'briefing' && (
+            {gameState === 'challenge_announcement' && (
               <div className="animate-in slide-in-from-bottom-5 duration-500">
                 <ProducerRoom />
               </div>
             )}
 
             {/* WORKROOM (ACTIVE QUEENS) */}
-            {['briefing', 'simulating'].includes(gameState) && (
+            {['challenge_announcement', 'challenge_performances'].includes(gameState) && (
               <div className="animate-in slide-in-from-bottom-10 duration-700">
                 <h3 className="text-xl font-black uppercase text-stone-400 mb-4 ml-2">In The Workroom</h3>
                 <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
@@ -785,8 +898,8 @@ export default function DragRaceSimulator() {
               </div>
             )}
 
-            {/* CRITIQUES & RESULTS DISPLAY */}
-            {gameState === 'critiques' && (
+            {/* RESULTS DISPLAY */}
+            {gameState === 'results' && (
                <div className="space-y-8 animate-in zoom-in-95 duration-500">
                  {/* SAFE QUEENS - Condensed */}
                  {activeQueens.some(q => placements[q.id] === 'SAFE' && q.trackRecord[currentEpIdx] !== 'GUEST') && (
@@ -886,20 +999,55 @@ export default function DragRaceSimulator() {
                       )}
                      </>
                   )}
-                  <button onClick={nextEpisode} className="mt-16 px-8 py-3 border-2 border-white rounded-full font-bold hover:bg-white hover:text-red-950 transition-colors">
-                    CONTINUE
+                  <button onClick={() => setGameState('untucked')} className="mt-16 px-8 py-3 border-2 border-white rounded-full font-bold hover:bg-white hover:text-red-950 transition-colors">
+                    CONTINUE TO UNTUCKED
                   </button>
                </div>
             )}
 
-            {/* STORYLINE TOAST */}
-            {currentStoryline && (
-               <div className="fixed bottom-4 right-4 max-w-sm bg-stone-900 text-white p-4 rounded-xl shadow-2xl border-l-4 border-pink-500 z-40 animate-in slide-in-from-right duration-500">
-                  <h4 className="font-bold text-pink-400 uppercase text-xs mb-1">Untucked Tea</h4>
-                  <p className="text-sm font-medium">{currentStoryline}</p>
-               </div>
-            )}
+          </div>
+        )}
 
+        {/* UNTUCKED STAGE */}
+        {gameState === 'untucked' && (
+          <div className="fixed inset-0 z-50 bg-gradient-to-br from-purple-900 via-pink-900 to-red-900 flex flex-col items-center justify-center p-6 text-white animate-in fade-in duration-500">
+            <div className="max-w-3xl w-full bg-black/40 backdrop-blur-md rounded-3xl p-8 md:p-12 border-2 border-pink-500/30 shadow-2xl">
+              <div className="flex items-center justify-center gap-3 mb-8">
+                <Heart className="h-10 w-10 text-pink-400 animate-pulse" />
+                <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tight">UNTUCKED</h2>
+                <Heart className="h-10 w-10 text-pink-400 animate-pulse" />
+              </div>
+
+              {currentStoryline && (
+                <div className="bg-pink-500/20 border-2 border-pink-400/40 rounded-2xl p-6 mb-8">
+                  <p className="text-lg md:text-xl font-bold text-center leading-relaxed">
+                    {currentStoryline}
+                  </p>
+                </div>
+              )}
+
+              <div className="space-y-6">
+                <p className="text-center text-xl font-bold text-pink-300">
+                  The queens spill tea backstage...
+                </p>
+
+                {/* Show remaining queens */}
+                <div className="grid grid-cols-4 md:grid-cols-6 gap-4 max-w-2xl mx-auto">
+                  {activeQueens.slice(0, 8).map(q => (
+                    <div key={q.id} className="flex flex-col items-center gap-2 opacity-80 hover:opacity-100 transition-opacity">
+                      <QueenAvatar queen={q} size="sm" className="border-pink-400" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <button
+                onClick={nextEpisode}
+                className="mt-10 w-full bg-gradient-to-r from-pink-600 to-purple-600 text-white px-8 py-5 rounded-xl font-black text-xl uppercase hover:scale-105 transition-transform shadow-lg"
+              >
+                NEXT EPISODE
+              </button>
+            </div>
           </div>
         )}
 
