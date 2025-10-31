@@ -1017,28 +1017,9 @@ export default function DragRaceSimulator() {
                  </div>
 
                  {!currentEp.isFinale && (
-                   <div className="space-y-4">
-                     <button
-                       onClick={() => {
-                         console.log('Button clicked! State before:', { gameState, top2, lipsyncers, placements });
-                         setGameState('lipsync_reveal');
-                         console.log('State after: lipsync_reveal');
-                       }}
-                       className="w-full py-6 bg-black text-white font-black text-2xl uppercase rounded-2xl hover:bg-red-600 transition-colors animate-pulse"
-                     >
-                       {currentEp.isPremiere ? "ANNOUNCE WINNER" : "LIP SYNC FOR YOUR LIFE"}
-                     </button>
-
-                     {/* DEBUG INFO */}
-                     <div className="bg-gray-800 text-white p-4 rounded text-xs font-mono">
-                       <p>DEBUG: GameState = {gameState}</p>
-                       <p>Top2 Length: {top2?.length || 0} | Lipsyncers: {lipsyncers?.length || 0}</p>
-                       <p>Is Premiere: {currentEp.isPremiere ? 'YES' : 'NO'}</p>
-                       {currentEp.isPremiere && top2 && (
-                         <p>Top2: {top2.map(q => q?.name).join(', ')}</p>
-                       )}
-                     </div>
-                   </div>
+                   <button onClick={() => setGameState('lipsync_reveal')} className="w-full py-6 bg-black text-white font-black text-2xl uppercase rounded-2xl hover:bg-red-600 transition-colors animate-pulse">
+                     {currentEp.isPremiere ? "ANNOUNCE WINNER" : "LIP SYNC FOR YOUR LIFE"}
+                   </button>
                  )}
                </div>
             )}
@@ -1050,18 +1031,16 @@ export default function DragRaceSimulator() {
         {['lipsync_reveal', 'lipsync_ongoing'].includes(gameState) && (() => {
           const contestants = currentEp.isPremiere ? top2 : lipsyncers;
 
-          // Safety check - if no contestants, show error and allow skip
+          // Safety check - if no contestants, go back to results
           if (!contestants || contestants.length < 2) {
             return (
-              <div className="fixed inset-0 z-50 bg-red-950 flex flex-col items-center justify-center p-6 text-white">
-                <h2 className="text-3xl font-black text-red-500 mb-4">ERROR: No Contestants Set!</h2>
-                <p className="text-lg mb-8">Top2: {top2?.length || 0}, Lipsyncers: {lipsyncers?.length || 0}</p>
+              <div className="fixed inset-0 z-[100] bg-red-950 flex flex-col items-center justify-center p-6 text-white">
+                <Skull className="w-20 h-20 text-red-500 mb-4 animate-pulse" />
+                <h2 className="text-3xl font-black text-red-400 mb-4">No Contestants for Lip Sync!</h2>
+                <p className="text-lg mb-8 text-red-200">Something went wrong with the placements.</p>
                 <button
-                  onClick={() => {
-                    console.log('State:', { gameState, top2, lipsyncers, placements });
-                    setGameState('results');
-                  }}
-                  className="bg-white text-black px-8 py-3 rounded-full font-bold"
+                  onClick={() => setGameState('results')}
+                  className="bg-white text-black px-8 py-3 rounded-full font-bold hover:scale-105 transition-transform"
                 >
                   GO BACK TO RESULTS
                 </button>
@@ -1070,7 +1049,7 @@ export default function DragRaceSimulator() {
           }
 
           return (
-            <div className="fixed inset-0 z-50 bg-black/95 flex flex-col items-center justify-center p-6 text-white animate-in fade-in duration-300">
+            <div className="fixed inset-0 z-[100] bg-black/95 flex flex-col items-center justify-center p-6 text-white animate-in fade-in duration-300">
               <h2 className="text-3xl md:text-5xl font-black text-red-600 uppercase mb-12 animate-pulse">
                 {currentEp.isPremiere ? "Lip Sync For The Win" : "Lip Sync For Your Life"}
               </h2>
@@ -1109,7 +1088,7 @@ export default function DragRaceSimulator() {
 
         {/* ELIMINATION REVEAL MODAL */}
         {gameState === 'elimination' && (
-           <div className="fixed inset-0 z-50 bg-red-950/95 flex flex-col items-center justify-center p-6 text-white text-center animate-in zoom-in duration-500">
+           <div className="fixed inset-0 z-[100] bg-red-950/98 flex flex-col items-center justify-center p-6 text-white text-center animate-in zoom-in duration-500">
               {doubleSashayUsed && eliminated && eliminated2 ? (
                  <>
                   <Skull className="w-24 h-24 text-red-500 mb-4" />
@@ -1139,8 +1118,8 @@ export default function DragRaceSimulator() {
 
         {/* UNTUCKED STAGE */}
         {gameState === 'untucked' && (
-          <div className="fixed inset-0 z-50 bg-gradient-to-br from-purple-900 via-pink-900 to-red-900 flex flex-col items-center justify-center p-6 text-white animate-in fade-in duration-500">
-            <div className="max-w-3xl w-full bg-black/40 backdrop-blur-md rounded-3xl p-8 md:p-12 border-2 border-pink-500/30 shadow-2xl">
+          <div className="fixed inset-0 z-[100] bg-gradient-to-br from-purple-900 via-pink-900 to-red-900 flex flex-col items-center justify-center p-6 text-white animate-in fade-in duration-500">
+            <div className="max-w-3xl w-full bg-black/90 backdrop-blur-xl rounded-3xl p-8 md:p-12 border-2 border-pink-400/50 shadow-2xl">
               <div className="flex items-center justify-center gap-3 mb-8">
                 <Heart className="h-10 w-10 text-pink-400 animate-pulse" />
                 <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tight">UNTUCKED</h2>
@@ -1200,8 +1179,8 @@ export default function DragRaceSimulator() {
           </div>
         )}
 
-        {/* ALWAYS VISIBLE TRACK RECORD (unless Intro) */}
-        {gameState !== 'intro' && <TrackRecordTable />}
+        {/* ALWAYS VISIBLE TRACK RECORD (unless Intro or Fullscreen States) */}
+        {!['intro', 'lipsync_reveal', 'lipsync_ongoing', 'elimination', 'untucked', 'finale_moment', 'finale_crowned'].includes(gameState) && <TrackRecordTable />}
 
       </main>
     </div>
