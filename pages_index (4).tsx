@@ -1017,9 +1017,28 @@ export default function DragRaceSimulator() {
                  </div>
 
                  {!currentEp.isFinale && (
-                   <button onClick={() => setGameState('lipsync_reveal')} className="w-full py-6 bg-black text-white font-black text-2xl uppercase rounded-2xl hover:bg-red-600 transition-colors animate-pulse">
-                     {currentEp.isPremiere ? "ANNOUNCE WINNER" : "LIP SYNC FOR YOUR LIFE"}
-                   </button>
+                   <div className="space-y-4">
+                     <button
+                       onClick={() => {
+                         console.log('Button clicked! State before:', { gameState, top2, lipsyncers, placements });
+                         setGameState('lipsync_reveal');
+                         console.log('State after: lipsync_reveal');
+                       }}
+                       className="w-full py-6 bg-black text-white font-black text-2xl uppercase rounded-2xl hover:bg-red-600 transition-colors animate-pulse"
+                     >
+                       {currentEp.isPremiere ? "ANNOUNCE WINNER" : "LIP SYNC FOR YOUR LIFE"}
+                     </button>
+
+                     {/* DEBUG INFO */}
+                     <div className="bg-gray-800 text-white p-4 rounded text-xs font-mono">
+                       <p>DEBUG: GameState = {gameState}</p>
+                       <p>Top2 Length: {top2?.length || 0} | Lipsyncers: {lipsyncers?.length || 0}</p>
+                       <p>Is Premiere: {currentEp.isPremiere ? 'YES' : 'NO'}</p>
+                       {currentEp.isPremiere && top2 && (
+                         <p>Top2: {top2.map(q => q?.name).join(', ')}</p>
+                       )}
+                     </div>
+                   </div>
                  )}
                </div>
             )}
@@ -1028,29 +1047,51 @@ export default function DragRaceSimulator() {
         )}
 
         {/* LIPSYNC ARENA */}
-        {['lipsync_reveal', 'lipsync_ongoing'].includes(gameState) && (
-           <div className="fixed inset-0 z-50 bg-black/95 flex flex-col items-center justify-center p-6 text-white animate-in fade-in duration-300">
+        {['lipsync_reveal', 'lipsync_ongoing'].includes(gameState) && (() => {
+          const contestants = currentEp.isPremiere ? top2 : lipsyncers;
+
+          // Safety check - if no contestants, show error and allow skip
+          if (!contestants || contestants.length < 2) {
+            return (
+              <div className="fixed inset-0 z-50 bg-red-950 flex flex-col items-center justify-center p-6 text-white">
+                <h2 className="text-3xl font-black text-red-500 mb-4">ERROR: No Contestants Set!</h2>
+                <p className="text-lg mb-8">Top2: {top2?.length || 0}, Lipsyncers: {lipsyncers?.length || 0}</p>
+                <button
+                  onClick={() => {
+                    console.log('State:', { gameState, top2, lipsyncers, placements });
+                    setGameState('results');
+                  }}
+                  className="bg-white text-black px-8 py-3 rounded-full font-bold"
+                >
+                  GO BACK TO RESULTS
+                </button>
+              </div>
+            );
+          }
+
+          return (
+            <div className="fixed inset-0 z-50 bg-black/95 flex flex-col items-center justify-center p-6 text-white animate-in fade-in duration-300">
               <h2 className="text-3xl md:text-5xl font-black text-red-600 uppercase mb-12 animate-pulse">
                 {currentEp.isPremiere ? "Lip Sync For The Win" : "Lip Sync For Your Life"}
               </h2>
               <div className="flex items-center gap-8 md:gap-16">
-                 <div className="text-center">
-                   <QueenAvatar
-                     queen={currentEp.isPremiere ? top2[0] : lipsyncers[0]}
-                     size="xl"
-                     className="border-red-500 shadow-[0_0_25px_rgba(248,113,113,0.45)]"
-                   />
-                   <h3 className="mt-4 text-xl md:text-3xl font-bold">{currentEp.isPremiere ? top2[0]?.name : lipsyncers[0]?.name}</h3>
-                 </div>
-                 <div className="text-4xl md:text-6xl font-black text-stone-600 italic">VS</div>
-                 <div className="text-center">
-                   <QueenAvatar
-                     queen={currentEp.isPremiere ? top2[1] : lipsyncers[1]}
-                     size="xl"
-                     className="border-red-500 shadow-[0_0_25px_rgba(248,113,113,0.45)]"
-                   />
-                   <h3 className="mt-4 text-xl md:text-3xl font-bold">{currentEp.isPremiere ? top2[1]?.name : lipsyncers[1]?.name}</h3>
-                 </div>
+                <div className="text-center">
+                  <QueenAvatar
+                    queen={contestants[0]}
+                    size="xl"
+                    className="border-red-500 shadow-[0_0_25px_rgba(248,113,113,0.45)]"
+                  />
+                  <h3 className="mt-4 text-xl md:text-3xl font-bold">{contestants[0]?.name || 'Unknown'}</h3>
+                </div>
+                <div className="text-4xl md:text-6xl font-black text-stone-600 italic">VS</div>
+                <div className="text-center">
+                  <QueenAvatar
+                    queen={contestants[1]}
+                    size="xl"
+                    className="border-red-500 shadow-[0_0_25px_rgba(248,113,113,0.45)]"
+                  />
+                  <h3 className="mt-4 text-xl md:text-3xl font-bold">{contestants[1]?.name || 'Unknown'}</h3>
+                </div>
               </div>
 
               {gameState === 'lipsync_reveal' ? (
@@ -1062,8 +1103,9 @@ export default function DragRaceSimulator() {
                   <Mic className="inline-block mr-2" /> PERFORMING...
                 </div>
               )}
-           </div>
-        )}
+            </div>
+          );
+        })()}
 
         {/* ELIMINATION REVEAL MODAL */}
         {gameState === 'elimination' && (
