@@ -213,8 +213,9 @@ export default function DragRaceSimulator() {
     // Filter queens competing THIS episode
     const competingQueens = activeQueens.filter(q => q.trackRecord[currentEpIdx] !== 'GUEST');
 
-    // Check if producer manually set all placements
-    const hasManualPlacements = Object.keys(manualPlacements).length > 0;
+    // Check if producer manually set ALL placements (complete override)
+    const allQueensHavePlacements = competingQueens.every(q => manualPlacements[q.id]);
+    const hasManualPlacements = allQueensHavePlacements && Object.keys(manualPlacements).length > 0;
 
     if (hasManualPlacements) {
       // Use manual placements
@@ -226,11 +227,11 @@ export default function DragRaceSimulator() {
       const topQueens = competingQueens.filter(q => manualPlacements[q.id] === 'TOP2');
 
       if (currentEp.isPremiere) {
-        setTop2(topQueens);
+        setTop2(topQueens.length >= 2 ? topQueens.slice(0, 2) : topQueens);
         setLipsyncers([]);
       } else {
         setTop2([]);
-        setLipsyncers(bottomQueens);
+        setLipsyncers(bottomQueens.length >= 2 ? bottomQueens.slice(0, 2) : bottomQueens);
       }
 
       setTimeout(() => setGameState('results'), 2000);
@@ -583,6 +584,8 @@ export default function DragRaceSimulator() {
     if (!eligibleQueens.length) return null;
 
     const hasManualOverrides = Object.keys(manualPlacements).length > 0;
+    const allQueensSet = eligibleQueens.every(q => manualPlacements[q.id]);
+    const someQueensSet = hasManualOverrides && !allQueensSet;
 
     const updatePlacement = (queenId: string, placement: Placement | null) => {
       setManualPlacements(prev => {
@@ -608,7 +611,11 @@ export default function DragRaceSimulator() {
             <div>
               <h3 className="text-2xl font-black uppercase tracking-tight">Producer Room</h3>
               <p className="text-xs md:text-sm text-stone-500 font-semibold uppercase tracking-wide">
-                Override placements for this episode. Set each queen's result manually.
+                {allQueensSet
+                  ? "✅ Full override active - All queens set!"
+                  : someQueensSet
+                  ? "⚠️ Set ALL queens to override, or it will run automatically"
+                  : "Override placements for this episode. Set each queen's result manually."}
               </p>
             </div>
           </div>
@@ -625,6 +632,15 @@ export default function DragRaceSimulator() {
             Clear Overrides
           </button>
         </div>
+
+        {someQueensSet && (
+          <div className="mt-4 bg-yellow-50 border-2 border-yellow-300 rounded-xl p-4">
+            <p className="text-sm font-bold text-yellow-800 text-center">
+              ⚠️ You must set placements for ALL {eligibleQueens.length} queens to use manual override.
+              Currently set: {Object.keys(manualPlacements).length}/{eligibleQueens.length}
+            </p>
+          </div>
+        )}
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {eligibleQueens.map(q => {
@@ -794,61 +810,132 @@ export default function DragRaceSimulator() {
 
         {/* ENTRANCES (EP1 ONLY) */}
         {gameState === 'entrances' && currentEp.number === 1 && (
-          <div className="space-y-12 animate-in fade-in zoom-in duration-1000">
-            <div className="bg-gradient-to-br from-pink-100 via-purple-100 to-blue-100 rounded-3xl p-12 shadow-2xl text-center">
-              <h1 className="text-5xl md:text-7xl font-black uppercase tracking-tight mb-6 bg-clip-text text-transparent bg-gradient-to-r from-pink-600 via-purple-600 to-blue-600">
-                ENTRANCES
-              </h1>
-              <p className="text-xl md:text-2xl font-bold text-stone-700 mb-12">
-                The queens make their grand entrance into the werkroom! ✨
-              </p>
+          <div className="min-h-screen flex items-center justify-center -mt-8">
+            <div className="w-full max-w-7xl space-y-8 animate-in fade-in zoom-in duration-1000">
+              <div className="text-center space-y-4">
+                <h1 className="text-6xl md:text-8xl font-black uppercase tracking-tighter leading-none">
+                  <span className="block bg-clip-text text-transparent bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 animate-pulse">
+                    ENTRANCES
+                  </span>
+                </h1>
+                <div className="flex items-center justify-center gap-3 text-stone-600">
+                  <Sparkles className="h-6 w-6 text-pink-500 animate-spin" />
+                  <p className="text-xl md:text-2xl font-bold">
+                    Meet the 13 Queens of Season 12
+                  </p>
+                  <Sparkles className="h-6 w-6 text-purple-500 animate-spin" style={{ animationDirection: 'reverse' }} />
+                </div>
+              </div>
 
-              <div className="grid grid-cols-3 md:grid-cols-5 gap-8 max-w-5xl mx-auto">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 p-4">
                 {queens.map((q, idx) => (
-                  <div key={q.id} className="animate-in slide-in-from-bottom duration-700" style={{ animationDelay: `${idx * 100}ms` }}>
-                    <QueenAvatar queen={q} size="lg" className="border-pink-300 shadow-xl" />
-                    <p className="text-sm font-bold mt-3 text-center">{q.name}</p>
+                  <div
+                    key={q.id}
+                    className="group animate-in slide-in-from-bottom duration-700 hover:-translate-y-2 transition-transform"
+                    style={{ animationDelay: `${idx * 80}ms` }}
+                  >
+                    <div className="bg-white rounded-2xl p-4 shadow-lg border-2 border-pink-100 hover:border-pink-300 hover:shadow-2xl transition-all">
+                      <div className="relative">
+                        <QueenAvatar queen={q} size="lg" className="border-pink-300 shadow-xl group-hover:scale-110 transition-transform mx-auto" />
+                        <div className="absolute -top-2 -right-2 bg-gradient-to-br from-pink-500 to-purple-500 rounded-full w-8 h-8 flex items-center justify-center text-white font-black text-sm shadow-lg">
+                          {idx + 1}
+                        </div>
+                      </div>
+                      <p className="text-sm font-bold mt-3 text-center leading-tight line-clamp-2 min-h-[2.5rem] flex items-center justify-center">
+                        {q.name}
+                      </p>
+                    </div>
                   </div>
                 ))}
               </div>
 
-              <button
-                onClick={() => setGameState('promo_chart')}
-                className="mt-12 bg-gradient-to-r from-pink-600 to-purple-600 text-white px-12 py-5 rounded-2xl font-black text-xl hover:scale-105 transition-transform shadow-xl"
-              >
-                CONTINUE TO PROMO LOOKS
-              </button>
+              <div className="flex justify-center pt-4">
+                <button
+                  onClick={() => setGameState('promo_chart')}
+                  className="group bg-gradient-to-r from-pink-600 via-purple-600 to-blue-600 text-white px-16 py-6 rounded-2xl font-black text-2xl uppercase hover:scale-105 transition-all shadow-2xl hover:shadow-pink-500/50 relative overflow-hidden"
+                >
+                  <span className="relative z-10">Continue to Promo Looks</span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </button>
+              </div>
             </div>
           </div>
         )}
 
         {/* PROMO CHART */}
         {gameState === 'promo_chart' && (
-          <div className="space-y-8 animate-in fade-in duration-700">
-            <div className="bg-white rounded-3xl p-8 shadow-xl border-2 border-stone-100 text-center relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500" />
-              <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tight mb-4">
-                PROMO LOOKS
-              </h2>
-              <p className="text-lg text-stone-500 font-medium">
-                The queens serve their best promo looks for Season 12!
-              </p>
+          <div className="space-y-10 animate-in fade-in duration-700">
+            <div className="bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 rounded-3xl p-10 shadow-2xl border-2 border-purple-200 text-center relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-3 bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 animate-pulse" />
+              <div className="absolute inset-0 bg-gradient-to-br from-pink-100/20 via-transparent to-purple-100/20 pointer-events-none" />
+
+              <div className="relative z-10 space-y-4">
+                <div className="flex items-center justify-center gap-3 mb-2">
+                  <Star className="h-8 w-8 text-yellow-500 fill-yellow-500 animate-pulse" />
+                  <h2 className="text-5xl md:text-6xl font-black uppercase tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-pink-600 via-purple-600 to-blue-600">
+                    Episode {currentEp.number}
+                  </h2>
+                  <Star className="h-8 w-8 text-yellow-500 fill-yellow-500 animate-pulse" />
+                </div>
+                <p className="text-2xl md:text-3xl font-black text-stone-800 uppercase">
+                  Promo Looks
+                </p>
+                <p className="text-lg text-stone-600 font-semibold max-w-2xl mx-auto">
+                  {activeQueens.length} queens remaining • Who will win? Who will go home?
+                </p>
+              </div>
             </div>
 
-            <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-7 gap-6">
-              {activeQueens.map(q => (
-                <div key={q.id} className="flex flex-col items-center gap-2">
-                  <QueenAvatar queen={q} size="md" className="border-purple-300 hover:scale-110 transition-transform" />
-                  <p className="text-xs font-bold text-center">{q.name}</p>
-                </div>
-              ))}
+            <div className="bg-white rounded-3xl p-8 shadow-xl border-2 border-stone-100">
+              <h3 className="text-2xl font-black uppercase text-center mb-8 text-stone-700">
+                Cast Photo Wall
+              </h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+                {activeQueens.map((q, idx) => (
+                  <div
+                    key={q.id}
+                    className="group animate-in zoom-in duration-500"
+                    style={{ animationDelay: `${idx * 50}ms` }}
+                  >
+                    <div className="relative bg-gradient-to-br from-pink-50 to-purple-50 rounded-xl p-3 shadow-md hover:shadow-2xl transition-all hover:-translate-y-1 border-2 border-transparent hover:border-purple-300">
+                      <QueenAvatar
+                        queen={q}
+                        size="md"
+                        className="border-purple-300 group-hover:border-pink-400 transition-all group-hover:scale-110 mx-auto"
+                      />
+                      <div className="mt-3 text-center">
+                        <p className="text-xs font-black text-stone-700 leading-tight line-clamp-2">
+                          {q.name}
+                        </p>
+                        <div className="flex items-center justify-center gap-2 mt-1 text-[10px] text-stone-500">
+                          <span className="flex items-center gap-0.5">
+                            <Trophy className="h-3 w-3 text-yellow-500" />{q.wins}
+                          </span>
+                          <span className="flex items-center gap-0.5">
+                            <Frown className="h-3 w-3 text-red-500" />{q.bottoms}
+                          </span>
+                        </div>
+                      </div>
+                      {q.wins > 0 && (
+                        <div className="absolute -top-1 -right-1 bg-yellow-400 rounded-full p-1 shadow-lg">
+                          <Crown className="h-3 w-3 text-yellow-900" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
 
             <button
               onClick={() => setGameState('challenge_announcement')}
-              className="w-full bg-black text-white py-6 rounded-2xl font-black text-2xl uppercase hover:bg-pink-600 transition-colors"
+              className="group w-full bg-gradient-to-r from-black via-pink-900 to-black text-white py-8 rounded-2xl font-black text-3xl uppercase hover:from-pink-600 hover:via-purple-600 hover:to-pink-600 transition-all shadow-2xl hover:shadow-pink-500/50 relative overflow-hidden"
             >
-              ANNOUNCE THIS WEEK'S CHALLENGE
+              <span className="relative z-10 flex items-center justify-center gap-3">
+                <Zap className="h-8 w-8 group-hover:animate-pulse" />
+                Announce This Week's Challenge
+                <Zap className="h-8 w-8 group-hover:animate-pulse" />
+              </span>
             </button>
           </div>
         )}
